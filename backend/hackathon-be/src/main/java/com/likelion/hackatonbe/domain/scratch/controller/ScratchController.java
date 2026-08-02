@@ -1,11 +1,8 @@
 package com.likelion.hackatonbe.domain.scratch.controller;
 
-import com.likelion.hackatonbe.domain.scratch.dto.DailyScratchResponse;
-import com.likelion.hackatonbe.domain.scratch.dto.ScratchIngestRequest;
-import com.likelion.hackatonbe.domain.scratch.dto.ScratchIngestResponse;
+import com.likelion.hackatonbe.domain.scratch.dto.*;
 import com.likelion.hackatonbe.domain.scratch.service.DailyScratchService;
 import com.likelion.hackatonbe.domain.scratch.service.ScratchIngestService;
-import com.likelion.hackatonbe.domain.scratch.dto.SyncStatusResponse;
 import com.likelion.hackatonbe.domain.scratch.service.SyncStatusService;
 import com.likelion.hackatonbe.global.error.BusinessException;
 import com.likelion.hackatonbe.global.error.ErrorCode;
@@ -26,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
-@RequestMapping("/v1")
+@RequestMapping("/scratch")
 public class ScratchController {
 
     private final ScratchIngestService ingestService;
@@ -63,6 +60,22 @@ public class ScratchController {
             @RequestParam(defaultValue = "Asia/Seoul") String timezone
     ) {
         return dailyScratchService.getDaily(userId, date, ZoneId.of(timezone));
+    }
+
+    @GetMapping("/events")
+    public ScratchTimelineResponse events(
+            @RequestHeader("X-User-Id") @Positive Long userId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date,
+            @RequestParam(defaultValue = "Asia/Seoul")
+            String timezone
+    ) {
+        return dailyScratchService.getTimeline(
+                userId,
+                date,
+                ZoneId.of(timezone)
+        );
     }
 
     @GetMapping("/sync/status")

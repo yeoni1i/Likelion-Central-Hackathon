@@ -1,6 +1,8 @@
 package com.likelion.hackatonbe.domain.scratch.service;
 
 import com.likelion.hackatonbe.domain.scratch.dto.DailyScratchResponse;
+import com.likelion.hackatonbe.domain.scratch.dto.ScratchTimelineItem;
+import com.likelion.hackatonbe.domain.scratch.dto.ScratchTimelineResponse;
 import com.likelion.hackatonbe.domain.scratch.entity.ScratchEvent;
 import com.likelion.hackatonbe.domain.scratch.repository.ScratchEventRepository;
 import com.likelion.hackatonbe.domain.scratch.repository.IngestBatchRepository;
@@ -22,10 +24,13 @@ public class DailyScratchService {
     public DailyScratchService(
             ScratchEventRepository eventRepository,
             IngestBatchRepository batchRepository
+
+
     ) {
         this.eventRepository = eventRepository;
         this.batchRepository = batchRepository;
     }
+
 
     @Transactional(readOnly = true)
     public DailyScratchResponse getDaily(Long userId, LocalDate date, ZoneId zoneId) {
@@ -64,4 +69,37 @@ public class DailyScratchService {
                 normalized
         );
     }
+
+
+    @Transactional(readOnly = true)
+    public ScratchTimelineResponse getTimeline(
+            Long userId,
+            LocalDate date,
+            ZoneId zoneId
+    ) {
+
+        Instant from = date.atStartOfDay(zoneId).toInstant();
+        Instant to = date.plusDays(1).atStartOfDay(zoneId).toInstant();
+
+        List<ScratchTimelineItem> timelineItems =
+                eventRepository
+                        .findAllByUserIdAndStartTsGreaterThanEqualAndStartTsLessThan(
+                                userId,
+                                from,
+                                to
+                        )
+                        .stream()
+                        .map(event -> new ScratchTimelineItem(
+                                event.getStartTs(),
+                                event.getDurationSec(),
+                                event.getIntensity()
+                        ))
+                        .toList();
+
+        return new ScratchTimelineResponse(
+                date,
+                timelineItems
+        );
+    }
+
 }
