@@ -18,7 +18,7 @@ interface ApiService {
     ): ScratchTimelineResponse
 
     //워치 등록 api
-    @POST("device-pairings/code")
+    @POST("devices/pairing-codes")
     suspend fun createPairingCode(
         @Query("parentUserId") parentUserId: Long
     ): PairingCodeResponse

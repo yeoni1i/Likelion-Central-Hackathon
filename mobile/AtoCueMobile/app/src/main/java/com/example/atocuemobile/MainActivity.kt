@@ -53,7 +53,7 @@ private enum class TestScreen {
 @Composable
 private fun TestApp() {
     var selectedScreen by remember {
-        mutableStateOf(TestScreen.PAIRING)
+        mutableStateOf<TestScreen?>(null)
     }
 
     Column(
@@ -98,6 +98,13 @@ private fun TestApp() {
             when (selectedScreen) {
                 TestScreen.PAIRING -> PairingTestScreen()
                 TestScreen.SCRATCH -> ScratchTestScreen()
+                null -> {
+                    Text(
+                        text = "테스트할 기능을 선택해주세요.",
+                        modifier = Modifier.padding(20.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
         }
     }
