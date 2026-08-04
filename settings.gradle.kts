@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ScratchDetecter"
 include(":app")
+include(":mobile")
