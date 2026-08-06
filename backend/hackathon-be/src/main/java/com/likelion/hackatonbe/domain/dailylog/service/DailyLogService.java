@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class DailyLogService {
@@ -43,5 +47,23 @@ public class DailyLogService {
                 savedLog.getImageUrl(),
                 savedLog.getDate()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<DailyLogDto.Response> getDailyLogsByDate(Long userId, LocalDate date) {
+        Child child = childRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("아이 정보를 찾을 수 없습니다."));
+
+        List<DailyLog> dailyLogs = dailyLogRepository.findByChildIdAndDate(child.getId(), date);
+
+        return dailyLogs.stream()
+                .map(log -> new DailyLogDto.Response(
+                        log.getId(),
+                        log.getMealType(),
+                        log.getFoods(),
+                        log.getImageUrl(),
+                        log.getDate()
+                ))
+                .collect(Collectors.toList());
     }
 }
