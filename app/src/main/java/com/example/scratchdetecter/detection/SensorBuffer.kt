@@ -1,4 +1,4 @@
-package com.example.scratchdetecter.MachineLearning
+package com.example.scratchdetecter.detection
 
 class SensorBuffer {
 

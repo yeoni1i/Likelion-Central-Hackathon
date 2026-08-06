@@ -1,4 +1,4 @@
-package com.example.scratchdetecter.MachineLearning
+package com.example.scratchdetecter.detection
 
 import android.content.Context
 import org.tensorflow.lite.Interpreter

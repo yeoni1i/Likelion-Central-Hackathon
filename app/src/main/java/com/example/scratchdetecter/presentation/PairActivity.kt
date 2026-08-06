@@ -38,7 +38,7 @@ import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
-import com.example.scratchdetecter.network.PairDeviceRequest
+import com.example.scratchdetecter.network.dto.PairDeviceRequest
 import com.example.scratchdetecter.network.RetrofitClient
 import com.example.scratchdetecter.presentation.theme.ScratchDetecterTheme
 import kotlinx.coroutines.launch

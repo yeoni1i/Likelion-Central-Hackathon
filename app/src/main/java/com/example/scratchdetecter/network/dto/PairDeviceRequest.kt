@@ -1,4 +1,4 @@
-package com.example.scratchdetecter.network
+package com.example.scratchdetecter.network.dto
 
 data class PairDeviceRequest(
     val pairingCode: String,
