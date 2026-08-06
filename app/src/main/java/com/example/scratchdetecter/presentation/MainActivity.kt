@@ -38,6 +38,7 @@ import com.example.scratchdetecter.presentation.screen.HomeScreen
 import com.example.scratchdetecter.presentation.screen.MonitoringScreen
 import com.example.scratchdetecter.presentation.screen.PairingCodeScreen
 import com.example.scratchdetecter.presentation.screen.PairingIntroScreen
+import com.example.scratchdetecter.presentation.screen.RestartScreen
 import com.example.scratchdetecter.presentation.screen.WarningScreen
 import com.example.scratchdetecter.presentation.theme.ScratchDetecterTheme
 import com.example.scratchdetecter.storage.PairingPreference

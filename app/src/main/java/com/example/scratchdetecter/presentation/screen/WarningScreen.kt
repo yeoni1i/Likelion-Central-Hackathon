@@ -16,7 +16,7 @@ fun WarningScreen(
     onTimeout: () -> Unit
 ) {
     LaunchedEffect(Unit) {
-        delay(3_000L)
+        delay(1_000L)
         onTimeout()
     }
 
