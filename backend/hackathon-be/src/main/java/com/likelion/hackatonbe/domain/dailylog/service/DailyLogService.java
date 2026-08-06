@@ -17,36 +17,41 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class DailyLogService {
 
     private final DailyLogRepository dailyLogRepository;
     private final ChildRepository childRepository;
     private final S3Service s3Service;
 
-    @Transactional
-    public DailyLogDto.Response createDailyLog(Long userId, MultipartFile image, DailyLogDto.CreateRequest request) {
+    public DailyLogDto.Response createDailyLog(
+            Long userId,
+            MultipartFile image,
+            DailyLogDto.CreateRequest request
+    ) {
         Child child = childRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("아이 정보를 찾을 수 없습니다."));
 
-        String imageUrl = s3Service.uploadImage(image);
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            imageUrl = s3Service.uploadImage(image);
+        }
 
         DailyLog dailyLog = DailyLog.builder()
                 .child(child)
+                .date(request.getDate())
                 .mealType(request.getMealType())
                 .foods(request.getFoods())
                 .imageUrl(imageUrl)
-                .date(request.getDate())
+                .showerCount(request.getShowerCount())
+                .moisturizerCount(request.getMoisturizerCount())
+                .symptoms(request.getSymptoms())
+                .memo(request.getMemo())
                 .build();
 
         DailyLog savedLog = dailyLogRepository.save(dailyLog);
 
-        return new DailyLogDto.Response(
-                savedLog.getId(),
-                savedLog.getMealType(),
-                savedLog.getFoods(),
-                savedLog.getImageUrl(),
-                savedLog.getDate()
-        );
+        return convertToResponse(savedLog);
     }
 
     @Transactional(readOnly = true)
@@ -57,13 +62,21 @@ public class DailyLogService {
         List<DailyLog> dailyLogs = dailyLogRepository.findByChildIdAndDate(child.getId(), date);
 
         return dailyLogs.stream()
-                .map(log -> new DailyLogDto.Response(
-                        log.getId(),
-                        log.getMealType(),
-                        log.getFoods(),
-                        log.getImageUrl(),
-                        log.getDate()
-                ))
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private DailyLogDto.Response convertToResponse(DailyLog log) {
+        return new DailyLogDto.Response(
+                log.getId(),
+                log.getMealType(),
+                log.getFoods(),
+                log.getImageUrl(),
+                log.getShowerCount(),
+                log.getMoisturizerCount(),
+                log.getSymptoms(),
+                log.getMemo(),
+                log.getDate()
+        );
     }
 }

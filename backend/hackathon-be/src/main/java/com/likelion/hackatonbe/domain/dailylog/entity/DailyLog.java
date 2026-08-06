@@ -1,6 +1,7 @@
 package com.likelion.hackatonbe.domain.dailylog.entity;
 
 import com.likelion.hackatonbe.domain.user.entity.Child;
+import com.likelion.hackatonbe.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Table(name = "daily_logs")
-public class DailyLog {
+public class DailyLog extends BaseTimeEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +24,9 @@ public class DailyLog {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "child_id", nullable = false)
     private Child child;
+
+    @Column(nullable = false)
+    private LocalDate date;
 
     private String mealType;
 
@@ -34,5 +38,16 @@ public class DailyLog {
 
     private String imageUrl;
 
-    private LocalDate date;
+    private Integer showerCount;
+
+    private Integer moisturizerCount;
+
+    @ElementCollection
+    @CollectionTable(name = "daily_log_symptoms", joinColumns = @JoinColumn(name = "daily_log_id"))
+    @Column(name = "symptom")
+    @Builder.Default
+    private List<String> symptoms = new ArrayList<>();
+
+    @Column(columnDefinition = "TEXT")
+    private String memo;
 }

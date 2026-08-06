@@ -21,11 +21,11 @@ public class DailyLogController {
 
     private final DailyLogService dailyLogService;
 
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<DailyLogDto.Response> createDailyLog(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart(value = "image", required = false) MultipartFile image,
-            @RequestPart(value = "request") DailyLogDto.CreateRequest request
+            @RequestPart("request") DailyLogDto.CreateRequest request
     ) {
         DailyLogDto.Response response = dailyLogService.createDailyLog(userDetails.getUserId(), image, request);
         return ResponseEntity.ok(response);
