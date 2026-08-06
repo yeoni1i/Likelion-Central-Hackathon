@@ -50,4 +50,22 @@ public class DailyLog extends BaseTimeEntity{
 
     @Column(columnDefinition = "TEXT")
     private String memo;
+
+    public void update(
+            String mealType,
+            List<String> foods,
+            String imageUrl,
+            Integer showerCount,
+            Integer moisturizerCount,
+            List<String> symptoms,
+            String memo
+    ) {
+        if (mealType != null) this.mealType = mealType;
+        if (foods != null) this.foods = foods;
+        if (imageUrl != null) this.imageUrl = imageUrl;
+        if (showerCount != null) this.showerCount = showerCount;
+        if (moisturizerCount != null) this.moisturizerCount = moisturizerCount;
+        if (symptoms != null) this.symptoms = symptoms;
+        if (memo != null) this.memo = memo;
+    }
 }
