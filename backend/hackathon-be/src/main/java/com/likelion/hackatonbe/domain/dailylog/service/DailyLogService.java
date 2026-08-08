@@ -6,6 +6,8 @@ import com.likelion.hackatonbe.domain.dailylog.repository.DailyLogRepository;
 import com.likelion.hackatonbe.domain.user.entity.Child;
 import com.likelion.hackatonbe.domain.user.repository.ChildRepository;
 import com.likelion.hackatonbe.global.S3.S3Service;
+import com.likelion.hackatonbe.global.error.BusinessException;
+import com.likelion.hackatonbe.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,20 +19,20 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class DailyLogService {
 
     private final DailyLogRepository dailyLogRepository;
     private final ChildRepository childRepository;
     private final S3Service s3Service;
 
+    @Transactional
     public DailyLogDto.Response createDailyLog(
             Long userId,
             MultipartFile image,
             DailyLogDto.CreateRequest request
     ) {
         Child child = childRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("아이 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         String imageUrl = null;
         if (image != null && !image.isEmpty()) {
@@ -57,7 +59,7 @@ public class DailyLogService {
     @Transactional(readOnly = true)
     public List<DailyLogDto.Response> getDailyLogsByDate(Long userId, LocalDate date) {
         Child child = childRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("아이 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         List<DailyLog> dailyLogs = dailyLogRepository.findByChildIdAndDate(child.getId(), date);
 
@@ -66,20 +68,7 @@ public class DailyLogService {
                 .collect(Collectors.toList());
     }
 
-    private DailyLogDto.Response convertToResponse(DailyLog log) {
-        return new DailyLogDto.Response(
-                log.getId(),
-                log.getMealType(),
-                log.getFoods(),
-                log.getImageUrl(),
-                log.getShowerCount(),
-                log.getMoisturizerCount(),
-                log.getSymptoms(),
-                log.getMemo(),
-                log.getDate()
-        );
-    }
-
+    @Transactional
     public DailyLogDto.Response updateDailyLog(
             Long userId,
             Long dailyLogId,
@@ -87,10 +76,10 @@ public class DailyLogService {
             DailyLogDto.CreateRequest request
     ) {
         DailyLog dailyLog = dailyLogRepository.findById(dailyLogId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 일상 기록이 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.DAILY_LOG_NOT_FOUND));
 
         if (!dailyLog.getChild().getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("수정 권한이 없습니다.");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_DAILY_LOG_ACCESS);
         }
 
         String imageUrl = dailyLog.getImageUrl();
@@ -111,14 +100,29 @@ public class DailyLogService {
         return convertToResponse(dailyLog);
     }
 
+    @Transactional
     public void deleteDailyLog(Long userId, Long dailyLogId) {
         DailyLog dailyLog = dailyLogRepository.findById(dailyLogId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 일상 기록이 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.DAILY_LOG_NOT_FOUND));
 
         if (!dailyLog.getChild().getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_DAILY_LOG_ACCESS);
         }
 
         dailyLogRepository.delete(dailyLog);
+    }
+
+    private DailyLogDto.Response convertToResponse(DailyLog log) {
+        return new DailyLogDto.Response(
+                log.getId(),
+                log.getMealType(),
+                log.getFoods(),
+                log.getImageUrl(),
+                log.getShowerCount(),
+                log.getMoisturizerCount(),
+                log.getSymptoms(),
+                log.getMemo(),
+                log.getDate()
+        );
     }
 }
