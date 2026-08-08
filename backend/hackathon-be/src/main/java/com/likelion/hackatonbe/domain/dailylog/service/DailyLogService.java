@@ -79,46 +79,4 @@ public class DailyLogService {
                 log.getDate()
         );
     }
-
-    public DailyLogDto.Response updateDailyLog(
-            Long userId,
-            Long dailyLogId,
-            MultipartFile image,
-            DailyLogDto.CreateRequest request
-    ) {
-        DailyLog dailyLog = dailyLogRepository.findById(dailyLogId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 일상 기록이 존재하지 않습니다."));
-
-        if (!dailyLog.getChild().getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("수정 권한이 없습니다.");
-        }
-
-        String imageUrl = dailyLog.getImageUrl();
-        if (image != null && !image.isEmpty()) {
-            imageUrl = s3Service.uploadImage(image);
-        }
-
-        dailyLog.update(
-                request.getMealType(),
-                request.getFoods(),
-                imageUrl,
-                request.getShowerCount(),
-                request.getMoisturizerCount(),
-                request.getSymptoms(),
-                request.getMemo()
-        );
-
-        return convertToResponse(dailyLog);
-    }
-
-    public void deleteDailyLog(Long userId, Long dailyLogId) {
-        DailyLog dailyLog = dailyLogRepository.findById(dailyLogId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 일상 기록이 존재하지 않습니다."));
-
-        if (!dailyLog.getChild().getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("삭제 권한이 없습니다.");
-        }
-
-        dailyLogRepository.delete(dailyLog);
-    }
 }

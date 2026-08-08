@@ -39,24 +39,4 @@ public class DailyLogController {
         List<DailyLogDto.Response> responses = dailyLogService.getDailyLogsByDate(userDetails.getUserId(), date);
         return ResponseEntity.ok(responses);
     }
-
-    @PatchMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<DailyLogDto.Response> updateDailyLog(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("id") Long id,
-            @RequestPart(value = "image", required = false) MultipartFile image,
-            @RequestPart("request") DailyLogDto.CreateRequest request
-    ) {
-        DailyLogDto.Response response = dailyLogService.updateDailyLog(userDetails.getUserId(), id, image, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDailyLog(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("id") Long id
-    ) {
-        dailyLogService.deleteDailyLog(userDetails.getUserId(), id);
-        return ResponseEntity.noContent().build();
-    }
 }
