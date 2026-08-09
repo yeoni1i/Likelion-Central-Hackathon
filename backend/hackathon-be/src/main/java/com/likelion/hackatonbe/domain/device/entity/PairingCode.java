@@ -15,8 +15,8 @@ public class PairingCode {
     @Column(nullable = false, unique = true, length = 6)
     private String code;
 
-    @Column(nullable = false)
-    private Long parentUserId;
+    @Column(name = "child_id", nullable = false)
+    private Long childId;
 
     @Column(nullable = false)
     private LocalDateTime expiresAt;
@@ -30,11 +30,11 @@ public class PairingCode {
 
     public PairingCode(
             String code,
-            Long parentUserId,
+            Long childId,
             LocalDateTime expiresAt
     ) {
         this.code = code;
-        this.parentUserId = parentUserId;
+        this.childId = childId;
         this.expiresAt = expiresAt;
         this.status = PairingStatus.WAITING;
     }
@@ -63,8 +63,8 @@ public class PairingCode {
         return code;
     }
 
-    public Long getParentUserId() {
-        return parentUserId;
+    public Long getChildId() {
+        return childId;
     }
 
     public LocalDateTime getExpiresAt() {
@@ -75,4 +75,3 @@ public class PairingCode {
         return status;
     }
 }
-
