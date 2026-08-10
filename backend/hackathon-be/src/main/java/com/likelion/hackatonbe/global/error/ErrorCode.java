@@ -20,7 +20,11 @@ public enum ErrorCode {
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다."),
 
     DAILY_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 일상 기록이 존재하지 않습니다."),
-    UNAUTHORIZED_DAILY_LOG_ACCESS(HttpStatus.FORBIDDEN, "해당 일상 기록에 대한 권한이 없습니다.");
+    UNAUTHORIZED_DAILY_LOG_ACCESS(HttpStatus.FORBIDDEN, "해당 일상 기록에 대한 권한이 없습니다."),
+
+    INVALID_LOCATION_PARAMETER(HttpStatus.BAD_REQUEST, "잘못된 위도/경도 좌표값입니다."),
+    WEATHER_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "날씨 정보를 불러오는 중 오류가 발생했습니다."),
+    CHILD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 아이 정보를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
