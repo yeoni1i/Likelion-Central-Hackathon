@@ -8,6 +8,11 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
+import com.example.atocuemobile.network.dto.LoginRequest
+import com.example.atocuemobile.network.dto.LoginResponse
+import com.example.atocuemobile.network.dto.SignUpRequest
+import retrofit2.http.Body
+import com.example.atocuemobile.network.dto.ParentInfoRequest
 interface ApiService {
     //하루 데이터 조회
     @GET("scratch/events")
@@ -30,4 +35,17 @@ interface ApiService {
         @Query("date") date: String,
         @Query("timezone") timezone: String = "Asia/Seoul"
     ): DailyScratchResponse
+
+    // 로그인
+    @POST("accounts/")
+    suspend fun login(
+        @Body request: LoginRequest
+    ): LoginResponse
+
+    // 회원가입
+    @POST("accounts/signup_account")
+    suspend fun signUp(
+        @Body request: SignUpRequest
+    ): String
+
 }
