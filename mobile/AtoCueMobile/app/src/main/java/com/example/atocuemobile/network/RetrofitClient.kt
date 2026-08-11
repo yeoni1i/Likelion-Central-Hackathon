@@ -1,5 +1,7 @@
 package com.example.atocuemobile.network
 
+import com.example.atocuemobile.network.api.ApiService
+import com.example.atocuemobile.network.api.WeatherApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -15,5 +17,15 @@ object RetrofitClient {
             )
             .build()
             .create(ApiService::class.java)
+    }
+
+    val weatherApiService: WeatherApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(
+                GsonConverterFactory.create()
+            )
+            .build()
+            .create(WeatherApiService::class.java)
     }
 }

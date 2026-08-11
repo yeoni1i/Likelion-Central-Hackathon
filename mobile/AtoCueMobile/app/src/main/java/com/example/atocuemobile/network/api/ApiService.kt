@@ -1,18 +1,17 @@
-package com.example.atocuemobile.network
+package com.example.atocuemobile.network.api
 
 import com.example.atocuemobile.network.dto.DailyScratchResponse
+import com.example.atocuemobile.network.dto.LoginRequest
+import com.example.atocuemobile.network.dto.LoginResponse
 import com.example.atocuemobile.network.dto.PairingCodeResponse
 import com.example.atocuemobile.network.dto.ScratchTimelineResponse
+import com.example.atocuemobile.network.dto.SignUpRequest
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
-import com.example.atocuemobile.network.dto.LoginRequest
-import com.example.atocuemobile.network.dto.LoginResponse
-import com.example.atocuemobile.network.dto.SignUpRequest
-import retrofit2.http.Body
-import com.example.atocuemobile.network.dto.ParentInfoRequest
 interface ApiService {
     //하루 데이터 조회
     @GET("scratch/events")
