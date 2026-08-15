@@ -1,6 +1,7 @@
 package com.example.scratchdetecter.detection
 
 import kotlin.math.sqrt
+import kotlin.math.abs
 
 object FeatureExtractor {
 
@@ -52,6 +53,7 @@ object FeatureExtractor {
                             sample.accZ * sample.accZ
                 )
             }
+
 
         val gyroMagnitude =
             samples.map { sample ->

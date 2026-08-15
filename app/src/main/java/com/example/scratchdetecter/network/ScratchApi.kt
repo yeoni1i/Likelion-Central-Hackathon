@@ -9,10 +9,9 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface ScratchApi {
-    // 백엔드 ScratchController의 실제 @PostMapping 경로와 다르면 이 문자열만 수정한다.
-    @POST("scratch/events")
+
+    @POST("scratch/ingest/scratch-events")
     suspend fun sendScratchEvents(
-        @Header("X-User-Id") userId: Long,
         @Header("Idempotency-Key") idempotencyKey: String,
         @Header("X-Backfill") backfill: Boolean,
         @Body request: ScratchIngestRequest

@@ -1,5 +1,6 @@
 package com.example.scratchdetecter.presentation.screen
 
+import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,41 +46,85 @@ fun PairingCodeScreen(
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    var code by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var code by remember {
+        mutableStateOf("")
+    }
+
+    var isLoading by remember {
+        mutableStateOf(false)
+    }
+
+    var errorMessage by remember {
+        mutableStateOf<String?>(null)
+    }
 
     suspend fun submit() {
-        if (code.length != 6 || isLoading) return
+        if (code.length != 6 || isLoading) {
+            return
+        }
+
         isLoading = true
         errorMessage = null
 
         try {
-            val androidId = Settings.Secure.getString(
-                context.contentResolver,
-                Settings.Secure.ANDROID_ID
-            ) ?: "unknown-watch"
-            val deviceName = "Galaxy Watch"
+            // 워치 고유 Android ID
+            val androidId =
+                Settings.Secure.getString(
+                    context.contentResolver,
+                    Settings.Secure.ANDROID_ID
+                ) ?: error("워치 ID를 가져올 수 없습니다.")
 
-            val response = RetrofitClient.scratchApi.pairDevice(
-                PairDeviceRequest(
-                    pairingCode = code,
-                    deviceId = androidId,
-                    deviceName = deviceName
-                )
-            )
+            // 실제 워치 모델명
+            val deviceName =
+                Build.MODEL
+
+            val response =
+                RetrofitClient
+                    .scratchApi
+                    .pairDevice(
+                        PairDeviceRequest(
+                            pairingCode = code,
+                            deviceId = androidId,
+                            deviceName = deviceName
+                        )
+                    )
 
             if (!response.isSuccessful) {
-                error("연동 실패 (${response.code()})")
+                val errorBody =
+                    response.errorBody()
+                        ?.string()
+
+                error(
+                    "연동 실패 (${response.code()})" +
+                            if (errorBody.isNullOrBlank()) {
+                                ""
+                            } else {
+                                ": $errorBody"
+                            }
+                )
             }
 
+            val body =
+                response.body()
+                    ?: error("서버 응답이 없습니다.")
+
+            val serverDeviceId =
+                body.deviceId
+                    ?.toLongOrNull()
+                    ?: error("서버 deviceId가 없습니다.")
+
             onPairingSuccess(
-                null,
+                serverDeviceId,
                 deviceName
             )
+
         } catch (exception: Exception) {
-            errorMessage = exception.message ?: "연동에 실패했습니다."
+            errorMessage =
+                exception.message
+                    ?: "연동에 실패했습니다."
+
             code = ""
+
         } finally {
             isLoading = false
         }
@@ -93,43 +138,83 @@ fun PairingCodeScreen(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF181818))
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Color(0xFF181818)
+            )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(76.dp)
-                .background(Color(0xFF202020))
-                .padding(start = 28.dp, end = 22.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .background(
+                    Color(0xFF202020)
+                )
+                .padding(
+                    start = 28.dp,
+                    end = 22.dp
+                ),
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
             BasicTextField(
                 value = code,
                 onValueChange = { input ->
-                    if (!isLoading) code = input.filter(Char::isDigit).take(6)
+                    if (!isLoading) {
+                        code =
+                            input
+                                .filter(
+                                    Char::isDigit
+                                )
+                                .take(6)
+                    }
                 },
-                modifier = Modifier.width(130.dp),
-                textStyle = TextStyle(
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Start
-                ),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
+                modifier =
+                    Modifier.width(130.dp),
+                textStyle =
+                    TextStyle(
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        textAlign =
+                            TextAlign.Start
+                    ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType =
+                            KeyboardType.Number,
+                        imeAction =
+                            ImeAction.Done
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onDone = {
+                            keyboardController
+                                ?.hide()
+                        }
+                    ),
                 singleLine = true,
-                cursorBrush = SolidColor(Color(0xFF8AB4F8)),
-                decorationBox = { inner ->
+                cursorBrush =
+                    SolidColor(
+                        Color(0xFF8AB4F8)
+                    ),
+                decorationBox = { innerTextField ->
                     Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.CenterStart
+                        modifier =
+                            Modifier.fillMaxWidth(),
+                        contentAlignment =
+                            Alignment.CenterStart
                     ) {
                         if (code.isEmpty()) {
-                            Text("6자리 코드입력", color = Color(0xFF77777F), fontSize = 19.sp)
+                            Text(
+                                text = "6자리 코드입력",
+                                color =
+                                    Color(0xFF77777F),
+                                fontSize = 19.sp
+                            )
                         }
-                        inner()
+
+                        innerTextField()
                     }
                 }
             )
@@ -138,22 +223,53 @@ fun PairingCodeScreen(
                 text = "×",
                 color = Color.White,
                 fontSize = 46.sp,
-                fontWeight = FontWeight.Light,
-                modifier = Modifier.width(44.dp).clickable(onClick = onClose),
-                textAlign = TextAlign.Center
+                fontWeight =
+                    FontWeight.Light,
+                modifier =
+                    Modifier
+                        .width(44.dp)
+                        .clickable(
+                            onClick = onClose
+                        ),
+                textAlign =
+                    TextAlign.Center
             )
         }
 
         Text(
-            text = when {
-                isLoading -> "연동 중..."
-                errorMessage != null -> errorMessage!!
-                else -> "키보드 영역"
-            },
-            color = if (errorMessage != null) Color(0xFFFF8A80) else Color.White,
-            fontSize = if (errorMessage != null) 14.sp else 18.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.Center).padding(horizontal = 24.dp)
+            text =
+                when {
+                    isLoading ->
+                        "연동 중..."
+
+                    errorMessage != null ->
+                        errorMessage!!
+
+                    else ->
+                        ""
+                },
+            color =
+                if (errorMessage != null) {
+                    Color(0xFFFF8A80)
+                } else {
+                    Color.White
+                },
+            fontSize =
+                if (errorMessage != null) {
+                    14.sp
+                } else {
+                    18.sp
+                },
+            textAlign =
+                TextAlign.Center,
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.Center
+                    )
+                    .padding(
+                        horizontal = 24.dp
+                    )
         )
     }
 }

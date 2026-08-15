@@ -30,4 +30,17 @@ class PairingPreference(context: Context) {
         const val KEY_SERVER_DEVICE_ID = "server_device_id"
         const val KEY_DEVICE_NAME = "device_name"
     }
+
+    fun serverDeviceId(): Long? {
+        val value = preferences.getLong(
+            KEY_SERVER_DEVICE_ID,
+            -1L
+        )
+
+        return if (value > 0L) {
+            value
+        } else {
+            null
+        }
+    }
 }

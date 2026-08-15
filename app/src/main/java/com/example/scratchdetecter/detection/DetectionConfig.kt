@@ -3,7 +3,9 @@ package com.example.scratchdetecter.detection
 const val MODEL_FILE_NAME = "scratch_binary_model.tflite"
 const val CONFIG_FILE_NAME = "scratch_binary_config.json"
 
+//20ms마다 센서값 1개 수집
 const val SAMPLE_INTERVAL_MS = 20L
+//100개 모아서 AI 판정
 const val DEFAULT_WINDOW_SIZE = 100
 const val DEFAULT_STEP_SIZE = 50
 
