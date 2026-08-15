@@ -24,6 +24,7 @@ import com.example.atocuemobile.ui.screen.timeline.CardBackground
 import com.example.atocuemobile.ui.screen.timeline.ChipBorder
 import com.example.atocuemobile.ui.screen.timeline.SliderTrackGray
 import com.example.atocuemobile.ui.screen.timeline.model.ShowerCount
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 @Composable
 fun ShowerMoisturizerSection(
@@ -142,7 +143,7 @@ private fun ShowerCountButton(
         )
     }
 }
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoisturizerSlider(
     value: Int,
@@ -178,8 +179,15 @@ private fun MoisturizerSlider(
             onValueChange = { onValueChange(it.toInt()) },
             valueRange = 1f..20f,
             steps = 18,
+            thumb = {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .background(Color.White, CircleShape)
+                        .border(2.dp, AtoCueBlue, CircleShape)
+                )
+            },
             colors = SliderDefaults.colors(
-                thumbColor = AtoCueBlue,
                 activeTrackColor = AtoCueBlue,
                 inactiveTrackColor = SliderTrackGray
             )
