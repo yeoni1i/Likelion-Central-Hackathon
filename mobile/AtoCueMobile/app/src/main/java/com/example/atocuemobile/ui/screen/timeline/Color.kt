@@ -20,3 +20,8 @@ val TextSecondary = Color(0xFFADAFB2)   // 회색 보조 텍스트 (발생시각
 // 배경/카드 색상
 val BackgroundGray = Color(0xFFFAFAFA)  // 카드 배경 (비어있는 식단 박스, 증상 칩 배경 등)
 val BorderGray = Color(0xFFEBEBEB)
+
+val CardBackground = Color(0xFFF5F5F7)   // 아코디언 카드 전체 배경
+val ChipBackground = Color(0xFFFFFFFF)   // 버튼/증상칩 배경 (흰색)
+val ChipBorder = Color(0xFFEBEBEB)       // 버튼 테두리
+val SliderTrackGray = Color(0xFFE5E7EC)  // 슬라이더 트랙 회색
