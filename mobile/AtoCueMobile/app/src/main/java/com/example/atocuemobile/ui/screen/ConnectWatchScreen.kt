@@ -49,12 +49,13 @@ fun ConnectWatchScreen(
 ) {
     Surface(
         modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding(), // 상단 상태바 영역 확보
+            .fillMaxSize(), // 배경색이 상태바 영역까지 꽉 차도록 여기서는 패딩을 주지 않음
         color = BaseBackgroundColor
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding() // 콘텐츠(앱바)만 상태바 아래로 내림
         ) {
             // 상단 앱바
             Row(
