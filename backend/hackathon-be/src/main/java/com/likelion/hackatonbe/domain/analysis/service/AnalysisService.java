@@ -6,6 +6,12 @@ import com.likelion.hackatonbe.domain.scratch.dto.DailyScratchResponse;
 import com.likelion.hackatonbe.domain.scratch.service.DailyScratchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.likelion.hackatonbe.domain.environment.entity.EnvironmentData;
+import com.likelion.hackatonbe.domain.environment.repository.EnvironmentDataRepository;
+import com.likelion.hackatonbe.domain.user.entity.Child;
+import com.likelion.hackatonbe.domain.user.repository.ChildRepository;
+import com.likelion.hackatonbe.global.error.BusinessException;
+import com.likelion.hackatonbe.global.error.ErrorCode;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -19,6 +25,8 @@ public class AnalysisService {
     private final DailyLogService dailyLogService;
     private final DailyScratchService dailyScratchService;
     private final OpenAIService openAIService;
+    private final ChildRepository childRepository;
+    private final EnvironmentDataRepository environmentDataRepository;
 
     public String generateDailyReport(
             Long userId,
@@ -26,26 +34,49 @@ public class AnalysisService {
             ZoneId zoneId
     ) {
 
-        // 1. 해당 날짜의 일상 기록 조회
+        // 1. 해당 사용자의 아이 조회
+        Child child = childRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 2. 해당 날짜의 일상 기록 조회
         List<DailyLogDto.Response> dailyLogs =
                 dailyLogService.getDailyLogsByDate(userId, date);
 
-        // 2. 해당 날짜의 긁음 기록 조회
+        // 3. 해당 날짜의 긁음 기록 조회
         DailyScratchResponse scratch =
                 dailyScratchService.getDaily(userId, date, zoneId);
 
-        // 3. 식단 정보 문자열로 정리
+        // 4. 해당 날짜의 환경 정보 조회
+        EnvironmentData environment =
+                environmentDataRepository
+                        .findByChildIdAndDate(child.getId(), date)
+                        .orElse(null);
+
+        // 5. 식단 정보 정리
         String meals = buildMealsText(dailyLogs);
 
-        // 4. 일상 특이사항 문자열로 정리
+        // 6. 일상 특이사항 정리
         String dailyNotes = buildDailyNotesText(dailyLogs);
 
-        // 5. OpenAI 분석 요청
+        // 7. 환경 정보
+        Double temperature =
+                environment != null ? environment.getTemperature() : null;
+
+        Integer humidity =
+                environment != null ? environment.getHumidity() : null;
+
+        String airQuality =
+                environment != null ? environment.getAirQuality() : null;
+
+        // 8. OpenAI 분석 요청
         return openAIService.analyze(
                 Math.toIntExact(scratch.eventCount()),
                 scratch.totalSeconds().doubleValue(),
                 meals,
-                dailyNotes
+                dailyNotes,
+                temperature,
+                humidity,
+                airQuality
         );
     }
 
