@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // 로그인, 회원가입 1단계, 완료 페이지는 인증 없이 허용
-                        .requestMatchers("/accounts/", "/accounts/signup_account", "/accounts/signup_end","/api/weather/**").permitAll()
+                        .requestMatchers("/accounts/", "/accounts/signup_account", "/accounts/signup_end","/error").permitAll()
                         // 그 외 모든 요청(signup_child 포함)은 JWT 인증 필요
                         .anyRequest().authenticated()
                 )
