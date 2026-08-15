@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.example.atocuemobile.ui.screen.PairingTestScreen
 import com.example.atocuemobile.ui.screen.ScratchTestScreen
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
+import com.example.atocuemobile.ui.screen.timeline.TimelineScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -38,7 +39,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TestApp()
+//                    TestApp()
+                    TimelineScreen(onAddRecordClick = {})
                 }
             }
         }
