@@ -3,8 +3,6 @@ package com.example.atocuemobile.ui.screen.record.meal
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,10 +18,10 @@ import androidx.compose.ui.unit.dp
 import com.example.atocuemobile.ui.screen.record.component.RecordDatePickerDialog
 import com.example.atocuemobile.ui.screen.record.meal.component.MealTimeSelectSheet
 import com.example.atocuemobile.ui.screen.record.meal.component.MenuInputRow
-import com.example.atocuemobile.ui.screen.timeline.model.MealType
 import java.time.LocalDate
 import java.time.YearMonth
 import com.example.atocuemobile.ui.screen.timeline.model.MealType
+import androidx.compose.foundation.clickable
 
 
 
