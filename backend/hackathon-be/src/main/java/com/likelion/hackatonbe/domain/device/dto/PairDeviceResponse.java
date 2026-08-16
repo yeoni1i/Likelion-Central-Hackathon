@@ -2,7 +2,7 @@ package com.likelion.hackatonbe.domain.device.dto;
 
 public record PairDeviceResponse(
         boolean success,
-        String deviceId,
+        Long deviceId,
         String message
 ) {
 }
