@@ -22,7 +22,8 @@ private val tabTitles = listOf("긁음 감지", "식단기록", "생활기록")
 
 @Composable
 fun TimelineScreen(
-    onAddRecordClick: () -> Unit
+    onAddRecordClick: () -> Unit,
+    onNavigateToLifeRecordInput: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(1) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -58,7 +59,7 @@ fun TimelineScreen(
         when (selectedTab) {
             0 -> ScratchDetectTab(date = selectedDate)
             1 -> MealRecordTab(date = selectedDate, onAddRecordClick = onAddRecordClick)
-            2 -> LifeRecordTab(date = selectedDate)
+            2 -> LifeRecordTab(date = selectedDate , onNavigateToLifeRecordInput = onNavigateToLifeRecordInput )
         }
     }
 
