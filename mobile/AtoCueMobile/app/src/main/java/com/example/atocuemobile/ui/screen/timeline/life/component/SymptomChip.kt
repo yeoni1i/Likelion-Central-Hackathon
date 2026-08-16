@@ -18,6 +18,7 @@ import com.example.atocuemobile.ui.screen.timeline.AtoCueBlue
 import com.example.atocuemobile.ui.screen.timeline.ChipBorder
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import com.example.atocuemobile.ui.screen.timeline.model.SymptomType
 
 @Composable
 fun SymptomChip(

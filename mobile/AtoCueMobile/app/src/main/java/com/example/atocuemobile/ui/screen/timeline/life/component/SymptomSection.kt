@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.ui.screen.timeline.CardBackground
+import com.example.atocuemobile.ui.screen.timeline.model.SymptomType
+import androidx.compose.foundation.lazy.grid.items
 
 @Composable
 fun SymptomSection(
