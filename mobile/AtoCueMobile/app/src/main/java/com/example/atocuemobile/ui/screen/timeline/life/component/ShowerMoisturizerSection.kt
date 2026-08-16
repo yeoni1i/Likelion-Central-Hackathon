@@ -25,6 +25,9 @@ import com.example.atocuemobile.ui.screen.timeline.ChipBorder
 import com.example.atocuemobile.ui.screen.timeline.SliderTrackGray
 import com.example.atocuemobile.ui.screen.timeline.model.ShowerCount
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 
 @Composable
 fun ShowerMoisturizerSection(
@@ -159,7 +162,6 @@ private fun MoisturizerSlider(
                 .fillMaxWidth()
                 .onSizeChanged { trackWidthPx = it.width }
         ) {
-            // 말풍선 (값 표시), 슬라이더 진행률에 맞춰 위치 이동
             val bubbleOffsetDp = with(density) { (trackWidthPx * fraction).toDp() }
             Box(
                 modifier = Modifier
@@ -178,14 +180,34 @@ private fun MoisturizerSlider(
             value = value.toFloat(),
             onValueChange = { onValueChange(it.toInt()) },
             valueRange = 1f..20f,
-            steps = 18,
+            // steps 파라미터 제거함 -> 트랙에 점(눈금) 안 생김
             thumb = {
                 Box(
                     modifier = Modifier
-                        .size(20.dp)
-                        .background(Color.White, CircleShape)
-                        .border(2.dp, AtoCueBlue, CircleShape)
-                )
+                        .size(width = 44.dp, height = 28.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(Color.White)
+                        .border(1.dp, ChipBorder, RoundedCornerShape(50)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
             },
             colors = SliderDefaults.colors(
                 activeTrackColor = AtoCueBlue,

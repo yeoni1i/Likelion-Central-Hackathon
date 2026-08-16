@@ -15,6 +15,7 @@ import com.example.atocuemobile.ui.screen.timeline.meal.MealRecordTab
 import com.example.atocuemobile.ui.screen.timeline.scratch.ScratchDetectTab
 import java.time.LocalDate
 import java.time.YearMonth
+import androidx.compose.ui.graphics.Color
 
 
 private val tabTitles = listOf("긁음 감지", "식단기록", "생활기록")
@@ -40,13 +41,16 @@ fun TimelineScreen(
         )
 
         TabRow(
-            selectedTabIndex = selectedTab
+            selectedTabIndex = selectedTab,
+            contentColor = Color.Black
         ) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title) }
+                    text = { Text(title) },
+                    selectedContentColor = Color.Black,
+                    unselectedContentColor = Color.Gray
                 )
             }
         }

@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.ui.screen.timeline.AtoCueBlue
 import com.example.atocuemobile.ui.screen.timeline.ChipBorder
 import com.example.atocuemobile.ui.screen.timeline.model.SymptomType
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun SymptomChip(
@@ -38,9 +40,11 @@ fun SymptomChip(
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // TODO: 여기 직접 export한 아이콘으로 교체
-        // Image(painter = painterResource(id = symptom.iconRes), contentDescription = symptom.label, modifier = Modifier.size(48.dp))
-        Box(modifier = Modifier.size(48.dp)) // 임시 자리 표시용 빈 박스
+        Image(
+            painter = painterResource(id = symptom.iconRes),
+            contentDescription = symptom.label,
+            modifier = Modifier.size(48.dp)
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = symptom.label, fontSize = 13.sp, fontWeight = FontWeight.Normal)

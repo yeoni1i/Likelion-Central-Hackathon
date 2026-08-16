@@ -30,13 +30,16 @@ fun WeekCalendar(
     onNextMonth: () -> Unit,
     onDateSelect: (Int) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 20.dp)
+    ) {
         Text(
             text = month,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold
+            fontSize = 18.sp,
+            fontWeight = FontWeight(500)
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         val today = LocalDate.now()
         val base = today.withDayOfMonth(
@@ -52,25 +55,26 @@ fun WeekCalendar(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 2.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isSelected) AtoCueBlue else Color.Transparent
                         )
                         .clickable { onDateSelect(date.dayOfMonth) }
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = dayLabels[index],
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight(400),
                             color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = date.dayOfMonth.toString(),
-                            fontSize = 13.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight(400),
                             color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
                         )

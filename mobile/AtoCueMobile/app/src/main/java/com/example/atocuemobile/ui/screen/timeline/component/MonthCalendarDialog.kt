@@ -23,6 +23,8 @@ import java.time.LocalDate
 import java.time.YearMonth
 import androidx.compose.runtime.remember
 import com.example.atocuemobile.ui.screen.timeline.AtoCueBlue
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun MonthCalendarDialog(
@@ -65,31 +67,36 @@ fun MonthCalendarDialog(
                     // TODO: top padding 48dp는 상태바 높이 임시값.
                     // 실제로는 windowInsets(statusBars)로 정확히 맞추는 게 안전함
                 ) {
-                    Text(text = "타임라인")
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(text = "타임라인",
+                         fontSize = 20.sp,
+                         fontWeight = FontWeight(600)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "${yearMonth.monthValue}월")
+                        Text(text = "${yearMonth.monthValue}월" , fontSize = 18.sp , fontWeight = FontWeight(500))
                         Row {
                             IconButton(onClick = onPrevMonth) {
-                                Icon(Icons.Default.ChevronLeft, contentDescription = "이전 달")
+                                Icon(Icons.Default.ChevronLeft, contentDescription = "이전 달" , modifier = Modifier.size(12.dp))
                             }
                             IconButton(onClick = onNextMonth) {
-                                Icon(Icons.Default.ChevronRight, contentDescription = "다음 달")
+                                Icon(Icons.Default.ChevronRight, contentDescription = "다음 달", modifier = Modifier.size(12.dp))
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Row(modifier = Modifier.fillMaxWidth()) {
                         listOf("일", "월", "화", "수", "목", "금", "토").forEach {
                             Text(
                                 text = it,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight(400),
                                 modifier = Modifier.weight(1f),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
@@ -114,7 +121,7 @@ fun MonthCalendarDialog(
                                 modifier = Modifier.padding(4.dp).size(40.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = day.toString(), color = Color.Gray)
+                                Text(text = day.toString(), color = Color(0xFFD0D6DD))
                             }
                         }
                         items((1..daysInMonth).toList()) { day ->
@@ -123,8 +130,8 @@ fun MonthCalendarDialog(
                             Box(
                                 modifier = Modifier
                                     .padding(4.dp)
-                                    .size(40.dp)
-                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .size(width = 35.dp, height = 35.dp)
+                                    .clip(RoundedCornerShape(10.dp))
                                     .background(
                                         if (isSelected) AtoCueBlue
                                         else Color.Transparent

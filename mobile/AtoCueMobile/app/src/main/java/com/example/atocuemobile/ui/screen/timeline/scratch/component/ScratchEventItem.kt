@@ -1,37 +1,69 @@
 package com.example.atocuemobile.ui.screen.timeline.scratch.component
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.atocuemobile.ui.screen.timeline.model.ScratchEvent
-import com.example.atocuemobile.ui.screen.timeline.model.ScratchLevel
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.atocuemobile.ui.screen.timeline.LevelCaution
-import com.example.atocuemobile.ui.screen.timeline.LevelDanger
-import com.example.atocuemobile.ui.screen.timeline.LevelNormal
-import com.example.atocuemobile.ui.screen.timeline.LevelStable
-
+import androidx.compose.ui.unit.sp
+import com.example.atocuemobile.ui.screen.timeline.CardBackground
+import com.example.atocuemobile.ui.screen.timeline.model.ScratchEvent
 
 @Composable
 fun ScratchEventItem(event: ScratchEvent) {
-    val (emoji, label, color) = when (event.level) {
-        ScratchLevel.STABLE -> Triple("🙂", "안정", LevelStable)
-        ScratchLevel.NORMAL -> Triple("🙂", "보통", LevelNormal)
-        ScratchLevel.CAUTION -> Triple("😐", "주의", LevelCaution)
-        ScratchLevel.DANGER -> Triple("😣", "위험", LevelDanger)
-    }
-    Text(text = "$emoji $label", color = color)
-
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(CardBackground)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(text = "$emoji $label")
-            Text(text = "발생시각 | ${event.startTime}~${event.endTime}")
-            // TODO: 회색 작은 글씨 스타일 지정
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = event.level.iconRes),
+                    contentDescription = event.level.label,
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = event.level.label,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = event.level.color
+                )
+            }
+            Text(
+                text = "발생시각 | ${event.startTime}~${event.endTime}",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(start = 15.dp)
+            )
         }
-        Text(text = "${event.durationMinutes}분 지속")
+
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = "${event.durationMinutes}분",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                text = "지속",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+        }
     }
 }
