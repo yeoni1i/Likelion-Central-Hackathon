@@ -60,12 +60,12 @@ public class DailyLog extends BaseTimeEntity{
             List<String> symptoms,
             String memo
     ) {
-        if (mealType != null) this.mealType = mealType;
-        if (foods != null) this.foods = foods;
-        if (imageUrl != null) this.imageUrl = imageUrl;
-        if (showerCount != null) this.showerCount = showerCount;
-        if (moisturizerCount != null) this.moisturizerCount = moisturizerCount;
-        if (symptoms != null) this.symptoms = symptoms;
-        if (memo != null) this.memo = memo;
+        this.mealType = mealType;
+        this.foods = foods;
+        this.imageUrl = imageUrl;
+        this.showerCount = showerCount;
+        this.moisturizerCount = moisturizerCount;
+        this.symptoms = symptoms;
+        this.memo = memo;
     }
 }

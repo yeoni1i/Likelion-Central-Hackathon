@@ -4,25 +4,32 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-
+    /*
+     * 실제 워치에서는 10.0.2.2가 아니라 PC/서버의 같은 Wi-Fi IPv4 주소를 사용한다.
+     * 기존에 정상 동작하던 BASE_URL이 있다면 그 값을 그대로 유지한다.
+     */
     private const val BASE_URL = "http://192.168.45.39:8080/"
 
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+    private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
+    private val client = OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .writeTimeout(15, TimeUnit.SECONDS)
         .build()
 
-    val scratchApi: ScratchApi by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(ScratchApi::class.java)
-    }
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val scratchApi: ScratchApi = retrofit.create(ScratchApi::class.java)
+    val devicePairingApi: DevicePairingApi = retrofit.create(DevicePairingApi::class.java)
 }
