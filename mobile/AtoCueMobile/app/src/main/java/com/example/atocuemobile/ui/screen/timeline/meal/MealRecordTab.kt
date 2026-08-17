@@ -1,5 +1,6 @@
 package com.example.atocuemobile.ui.screen.timeline.meal
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -47,10 +48,11 @@ fun MealRecordTab(
         item {
             Box(
                 modifier = Modifier
-                    .width(146.dp)
-                    .height(146.dp)
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
                     .clip(RoundedCornerShape(12.dp))
-                    .border(1.dp, color = Color(0xFFEBEBEB), RoundedCornerShape(12.dp))  // ← 테두리
+                    .border(1.dp, color = Color(0xFFEBEBEB), RoundedCornerShape(12.dp))
+                    .background(Color(0xFFFFFFFF))
                     .clickable { onAddRecordClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -58,10 +60,10 @@ fun MealRecordTab(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "새로운 기록 추가",
-                        modifier = Modifier.size(62.dp),              // ← + 아이콘 크기
-                        tint = Color(0xFF6C6E72)                             // ← + 아이콘 색
+                        modifier = Modifier.size(62.dp),
+                        tint = Color(0xFF6C6E72)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))          // ← 아이콘과 텍스트 사이 간격
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "새로운 기록 추가",
                         fontSize = 13.sp,

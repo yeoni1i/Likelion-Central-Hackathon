@@ -4,10 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,14 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.ui.screen.timeline.AtoCueBlue
-import com.example.atocuemobile.ui.screen.timeline.CardBackground
 import com.example.atocuemobile.ui.screen.timeline.ChipBorder
 import com.example.atocuemobile.ui.screen.timeline.SliderTrackGray
 import com.example.atocuemobile.ui.screen.timeline.model.ShowerCount
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material3.Icon
 
 @Composable
 fun ShowerMoisturizerSection(
@@ -41,12 +37,15 @@ fun ShowerMoisturizerSection(
         Column {
             Text(text = "샤워, 보습제", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
+            // 🌟 화이트 + 테두리 아웃라인
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(CardBackground)
-                    .padding(vertical = 20.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White)
+                    .border(1.dp, ChipBorder, RoundedCornerShape(12.dp))
+                    .padding(vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = "샤워", fontSize = 13.sp, color = Color.Gray)
@@ -66,11 +65,13 @@ fun ShowerMoisturizerSection(
 
     var expanded by remember { mutableStateOf(true) }
 
+    // 🌟 화이트 + 테두리 아웃라인
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(CardBackground)
+            .background(Color.White)
+            .border(1.dp, ChipBorder, RoundedCornerShape(16.dp))
     ) {
         Row(
             modifier = Modifier
@@ -146,6 +147,7 @@ private fun ShowerCountButton(
         )
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoisturizerSlider(
@@ -180,7 +182,6 @@ private fun MoisturizerSlider(
             value = value.toFloat(),
             onValueChange = { onValueChange(it.toInt()) },
             valueRange = 1f..20f,
-            // steps 파라미터 제거함 -> 트랙에 점(눈금) 안 생김
             thumb = {
                 Box(
                     modifier = Modifier

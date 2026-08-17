@@ -25,4 +25,6 @@ val ChipBackground = Color(0xFFFFFFFF)   // 버튼/증상칩 배경 (흰색)
 val ChipBorder = Color(0xFFEBEBEB)       // 버튼 테두리
 val SliderTrackGray = Color(0xFFE5E7EC)  // 슬라이더 트랙 회색
 
+val MainBackGroundColor = Color(0xFFFFFFFF)
+
 
