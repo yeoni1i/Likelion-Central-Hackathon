@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/accounts/", "/accounts/signup_account", "/accounts/signup_end",
                                 //스웨거 api테스트용
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",  "/analysis/**",  "/devices/**",
-                                "/scratch/ingest/scratch-events" ).permitAll()
+                                "/scratch/ingest/scratch-events" ,"/daily-logs" ).permitAll()
 
                         // 그 외 모든 요청(signup_child 포함)은 JWT 인증 필요
                         .anyRequest().authenticated()
