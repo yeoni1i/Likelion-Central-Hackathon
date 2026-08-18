@@ -45,11 +45,11 @@ interface AtoCueApiService {
         @Body request: OnboardingRequest
     ): Response<ResponseBody>
 
-    // 3. 워치 페어링 (토큰은 RetrofitClient 인터셉터가 자동 주입)
+    // 3. 워치 페어링 (백엔드 DevicePairingController에 맞춰 childId를 쿼리로 전달)
     @POST("devices/pairing-codes")
     suspend fun createPairingCode(
         @Header("Authorization") token: String,
-        @Query("parentUserId") parentUserId: Long
+        @Query("childId") childId: Long
     ): PairingCodeResponse
 
     @POST("devices/pair")
@@ -57,7 +57,7 @@ interface AtoCueApiService {
         @Body request: PairDeviceRequest
     ): PairDeviceResponse
 
-    // 4. 긁음 데이터 통계 & 이벤트 (기존 테스트 파일 호환용 getScratchEvents 포함)
+    // 4. 긁음 데이터 통계 & 이벤트
     @GET("scratch/reports/daily")
     suspend fun getDailyScratchReport(
         @Header("X-User-Id") userId: Long,
@@ -67,13 +67,6 @@ interface AtoCueApiService {
 
     @GET("scratch/events")
     suspend fun getScratchTimeline(
-        @Header("X-User-Id") userId: Long,
-        @Query("date") date: String,
-        @Query("timezone") timezone: String = "Asia/Seoul"
-    ): ScratchTimelineResponse
-
-    @GET("scratch/events")
-    suspend fun getScratchEvents(
         @Header("X-User-Id") userId: Long,
         @Query("date") date: String,
         @Query("timezone") timezone: String = "Asia/Seoul"

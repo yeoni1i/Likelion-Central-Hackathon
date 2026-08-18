@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,12 +36,13 @@ import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.ui.component.OnboardingProgressBar
 import com.example.atocuemobile.ui.component.PrimaryButton
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
-import com.example.atocuemobile.ui.theme.BorderGray
-import com.example.atocuemobile.ui.theme.LabelGray
-import com.example.atocuemobile.ui.theme.Pretendard
-import com.example.atocuemobile.ui.theme.TitleBlack
 
+// 💡 안전한 색상 및 폰트 정의
+private val TitleBlack = Color(0xFF000000)
 private val TextGrayColor = Color(0xFF6C6E72)
+private val BorderGray = Color(0xFFE5E7EB)
+private val LabelGray = Color(0xFF9CA3AF)
+private val Pretendard = FontFamily.Default
 
 @Composable
 fun SpecialNotesScreen(

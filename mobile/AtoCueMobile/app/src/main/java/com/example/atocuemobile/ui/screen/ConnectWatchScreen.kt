@@ -31,21 +31,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.shadow // 💡 shadow 누락 해결
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
-import com.example.atocuemobile.ui.theme.Pretendard
 
 private val BaseBackgroundColor = Color(0xFFF6F7FB)
 private val NumberCardBorderColor = Color(0xFFEBEBEB)
 private val PrimaryBlueColor = Color(0xFF5398FF)
 private val GrayTextColor = Color(0xFF8E95A3)
+private val Pretendard = FontFamily.Default
 
 @Composable
 fun ConnectWatchScreen(
