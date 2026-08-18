@@ -49,7 +49,7 @@ interface AtoCueApiService {
     @POST("devices/pairing-codes")
     suspend fun createPairingCode(
         @Header("Authorization") token: String,
-        @Query("parentUserId") parentUserId: Long
+        @Query("childId") childId: Long
     ): PairingCodeResponse
 
     @POST("devices/pair")

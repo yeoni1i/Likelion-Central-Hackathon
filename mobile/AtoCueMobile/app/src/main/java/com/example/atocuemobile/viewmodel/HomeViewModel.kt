@@ -40,7 +40,8 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    private val userId: Long = 1L,
+    private val userId: Long,
+    private val childId: Long,
     initialDeviceConnected: Boolean = false
 ) : ViewModel() {
 
@@ -62,7 +63,7 @@ class HomeViewModel(
 
                 val response = RetrofitClient.api.createPairingCode(
                     token = formattedToken,
-                    parentUserId = userId
+                    childId = childId
                 )
                 _uiState.update {
                     it.copy(
