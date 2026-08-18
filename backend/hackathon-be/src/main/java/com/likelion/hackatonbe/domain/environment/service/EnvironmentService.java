@@ -12,7 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,27 +28,31 @@ public class EnvironmentService {
         Child child = childRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHILD_NOT_FOUND));
 
-        WeatherResponse weather = weatherService.getWeatherAndAirQuality(lat, lon);
-        LocalDate today = LocalDate.now();
+        Optional<EnvironmentData> latestData = environmentDataRepository
+                .findTopByChildIdOrderByRecordedAtDesc(child.getId());
 
-        environmentDataRepository.findByChildIdAndDate(child.getId(), today)
-                .ifPresentOrElse(
-                        existingData -> existingData.updateWeather(
-                                weather.getTemperature(),
-                                weather.getHumidity(),
-                                weather.getAirQuality()
-                        ),
-                        () -> {
-                            EnvironmentData newData = EnvironmentData.builder()
-                                    .child(child)
-                                    .temperature(weather.getTemperature())
-                                    .humidity(weather.getHumidity())
-                                    .airQuality(weather.getAirQuality())
-                                    .date(today) // recordedAt -> date 변경
-                                    .build();
-                            environmentDataRepository.save(newData);
-                        }
-                );
+        if (latestData.isPresent() &&
+                latestData.get().getRecordedAt().isAfter(LocalDateTime.now().minusHours(1))) {
+
+            EnvironmentData recent = latestData.get();
+            return WeatherResponse.builder()
+                    .temperature(recent.getTemperature())
+                    .humidity(recent.getHumidity())
+                    .airQuality(recent.getAirQuality())
+                    .build();
+        }
+
+        WeatherResponse weather = weatherService.getWeatherAndAirQuality(lat, lon);
+
+        EnvironmentData newData = EnvironmentData.builder()
+                .child(child)
+                .temperature(weather.getTemperature())
+                .humidity(weather.getHumidity())
+                .airQuality(weather.getAirQuality())
+                .recordedAt(LocalDateTime.now())
+                .build();
+
+        environmentDataRepository.save(newData);
 
         return weather;
     }
