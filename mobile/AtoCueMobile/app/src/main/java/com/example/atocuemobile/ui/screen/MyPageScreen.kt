@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -73,13 +72,15 @@ fun MyPageScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = innerPadding.calculateBottomPadding()
+                    )
             ) {
-                // 1. 상단 로고 헤더 (홈화면과 동일하게 statusBarsPadding 및 패딩, 크기 동기화)
+                // 1. 상단 로고 헤더
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .statusBarsPadding()
                         .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 0.dp),
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
@@ -88,11 +89,12 @@ fun MyPageScreen(
                         painter = painterResource(id = R.drawable.atocue),
                         contentDescription = "AtoCue Logo",
                         contentScale = ContentScale.FillHeight,
-                        modifier = Modifier.height(16.dp) // 홈화면 로고 높이(16.dp)와 동일하게 맞춤
+                        modifier = Modifier.height(16.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(35.dp))
+                // 로고 아래 여백 축소 (35.dp -> 20.dp)
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // 2. 프로필 영역
                 Row(
@@ -117,8 +119,9 @@ fun MyPageScreen(
                         )
                     }
 
+                    // 프로필 이미지와 텍스트 사이 간격 줄이기 (offset x값을 -28 -> -20으로 조정하여 바짝 붙임)
                     Column(
-                        modifier = Modifier.offset(x = (-24).dp),
+                        modifier = Modifier.offset(x = (-20).dp),
                         horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -133,7 +136,7 @@ fun MyPageScreen(
                             )
                         )
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(2.dp)) // 라벨과 이름 사이 간격도 살짝 축소
 
                         Text(
                             text = guardianName,
@@ -148,7 +151,8 @@ fun MyPageScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                // 프로필 영역 아래 여백 축소 (24.dp -> 16.dp)
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // 3. 하단 메뉴 영역 (흰색)
                 Surface(

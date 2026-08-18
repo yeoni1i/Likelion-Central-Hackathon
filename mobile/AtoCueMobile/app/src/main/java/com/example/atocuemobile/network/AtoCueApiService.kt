@@ -75,6 +75,7 @@ interface AtoCueApiService {
     // 5. 날씨 API
     @GET("weather")
     suspend fun getWeather(
+        @Header("Authorization") token: String,
         @Query("lat") lat: Double,
         @Query("lon") lon: Double
     ): WeatherResponse

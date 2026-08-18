@@ -40,8 +40,8 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    private val userId: Long = 1L,       // 👈 부모 유저 ID (parent_user_id 매핑용)
-    private val childId: Long = 1L,      // 👈 자식 ID
+    private val userId: Long = 1L,       // 부모 유저 ID
+    private val childId: Long = 1L,      // 자식 ID
     initialDeviceConnected: Boolean = false
 ) : ViewModel() {
 
@@ -53,7 +53,7 @@ class HomeViewModel(
     )
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    // 1. 워치 6자리 페어링 코드 발급 (childId 사용)
+    // 1. 워치 6자리 페어링 코드 발급
     fun fetchPairingCode() {
         if (_uiState.value.isLoading) return
 
@@ -144,11 +144,18 @@ class HomeViewModel(
         }
     }
 
-    // 4. 날씨 정보 조회
+    // 4. 날씨 정보 조회 (토큰 헤더 추가 완료)
     fun fetchWeather(lat: Double = 37.5665, lon: Double = 126.9780) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api.getWeather(lat = lat, lon = lon)
+                val token = RetrofitClient.accessToken ?: ""
+                val formattedToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+
+                val response = RetrofitClient.api.getWeather(
+                    token = formattedToken,
+                    lat = lat,
+                    lon = lon
+                )
                 val guides = generateWeatherGuides(response)
                 _uiState.update {
                     it.copy(
