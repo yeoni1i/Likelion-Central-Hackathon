@@ -13,10 +13,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="PreviewHomeScreenNotConnected">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="PreviewHomeScreenDetectingVeryDanger">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-08-17T13:53:22.391268400Z">

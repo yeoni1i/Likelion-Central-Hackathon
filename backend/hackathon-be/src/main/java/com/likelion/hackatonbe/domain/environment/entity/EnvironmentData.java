@@ -4,19 +4,14 @@ import com.likelion.hackatonbe.domain.user.entity.Child;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(
-        name = "environment_data",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"child_id", "date"})
-        }
-)
+@Table(name = "environment_data")
 public class EnvironmentData {
 
     @Id
@@ -37,11 +32,5 @@ public class EnvironmentData {
     private String airQuality;
 
     @Column(nullable = false)
-    private LocalDate date;
-
-    public void updateWeather(Double temperature, Integer humidity, String airQuality) {
-        this.temperature = temperature;
-        this.humidity = humidity;
-        this.airQuality = airQuality;
-    }
+    private LocalDateTime recordedAt;
 }

@@ -20,7 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,9 +33,11 @@ import com.example.atocuemobile.network.dto.SignUpRequest
 import com.example.atocuemobile.ui.component.AuthTextField
 import com.example.atocuemobile.ui.component.PrimaryButton
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
-import com.example.atocuemobile.ui.theme.Pretendard
-import com.example.atocuemobile.ui.theme.TitleBlack
 import kotlinx.coroutines.launch
+
+// 💡 안전한 색상 및 폰트 정의
+private val TitleBlack = Color(0xFF000000)
+private val Pretendard = FontFamily.Default
 
 @Composable
 fun SignUpScreen(
@@ -122,8 +126,12 @@ fun SignUpScreen(
                     isLoading = true
                     scope.launch {
                         try {
+                            // 백엔드 SignUpRequest 스펙에 맞게 name값 추가 (아이디로 임시 대체)
                             val response = RetrofitClient.api.signUp(
-                                SignUpRequest(username = idInput.text, password = passwordInput.text)
+                                SignUpRequest(
+                                    username = idInput.text,
+                                    password = passwordInput.text,
+                                )
                             )
 
                             if (response.isSuccessful) {

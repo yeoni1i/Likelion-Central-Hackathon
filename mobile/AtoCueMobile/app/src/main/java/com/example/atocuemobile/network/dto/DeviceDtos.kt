@@ -2,12 +2,6 @@ package com.example.atocuemobile.network.dto
 
 import com.google.gson.annotations.SerializedName
 
-// 쿼리 대신 바디로 전달해야 할 경우를 대비한 요청 DTO
-data class CreatePairingCodeRequest(
-    @SerializedName("parentUserId")
-    val parentUserId: Long
-)
-
 // 1. 워치 페어링 6자리 코드 발급 응답 DTO
 data class PairingCodeResponse(
     @SerializedName("pairingCode")
@@ -31,7 +25,7 @@ data class PairDeviceResponse(
     @SerializedName("success")
     val success: Boolean,
     @SerializedName("deviceId")
-    val deviceId: String?,
+    val deviceId: Long?,
     @SerializedName("message")
     val message: String?
 )

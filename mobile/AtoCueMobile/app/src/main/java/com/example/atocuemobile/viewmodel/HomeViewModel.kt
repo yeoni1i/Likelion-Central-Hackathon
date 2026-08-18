@@ -40,8 +40,10 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
+
     private val userId: Long,
-    private val childId: Long,
+    private val childId: Long, // 👈 부모 유저 ID (parent_user_id 매핑용)
+
     initialDeviceConnected: Boolean = false
 ) : ViewModel() {
 
@@ -53,8 +55,10 @@ class HomeViewModel(
     )
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    // 1. 워치 6자리 페어링 코드 발급
+    // 1. 워치 6자리 페어링 코드 발급 (childId 사용)
     fun fetchPairingCode() {
+        if (_uiState.value.isLoading) return
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
@@ -73,7 +77,7 @@ class HomeViewModel(
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
             }
         }
     }

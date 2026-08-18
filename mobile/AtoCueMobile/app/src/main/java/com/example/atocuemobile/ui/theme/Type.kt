@@ -5,9 +5,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import com.example.atocuemobile.ui.theme.Pretendard
 import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.R
 
+// 💡 public을 붙여주어 다른 화면(ui.theme 외의 패키지)에서도 확실하게 가져다 쓸 수 있게 합니다.
 val Pretendard = FontFamily(
     Font(R.font.pretendard_regular, FontWeight.Normal),
     Font(R.font.pretendard_medium, FontWeight.Medium),

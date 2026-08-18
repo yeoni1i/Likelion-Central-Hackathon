@@ -12,7 +12,10 @@ import com.likelion.hackatonbe.domain.user.entity.Child;
 import com.likelion.hackatonbe.domain.user.repository.ChildRepository;
 import com.likelion.hackatonbe.global.error.BusinessException;
 import com.likelion.hackatonbe.global.error.ErrorCode;
-
+import com.likelion.hackatonbe.domain.analysis.dto.DailyAnalysisResponse;
+import com.likelion.hackatonbe.domain.analysis.dto.WeeklyAnalysisResponse;
+import com.likelion.hackatonbe.domain.dailylog.entity.DailyLog;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -22,40 +25,66 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AnalysisService {
 
+    private final DailyAnalysisService dailyAnalysisService;
     private final DailyLogService dailyLogService;
     private final DailyScratchService dailyScratchService;
     private final OpenAIService openAIService;
     private final ChildRepository childRepository;
     private final EnvironmentDataRepository environmentDataRepository;
+    private final WeeklyDataService weeklyDataService;
 
+    @Transactional(readOnly = true)
     public String generateDailyReport(
             Long userId,
             LocalDate date,
             ZoneId zoneId
     ) {
 
-        // 1. 해당 사용자의 아이 조회
+        // 해당 사용자의 아이 조회
         Child child = childRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 2. 해당 날짜의 일상 기록 조회
+        // AI 주간 분석용 최근 7일 일지 조회
+        List<DailyLog> weeklyLogs =
+                weeklyDataService.getWeeklyDailyLogs(
+                        child.getId(),
+                        date
+                );
+
+        // 해당 날짜의 일상 기록 조회
         List<DailyLogDto.Response> dailyLogs =
                 dailyLogService.getDailyLogsByDate(userId, date);
 
-        // 3. 해당 날짜의 긁음 기록 조회
+        // 해당 날짜의 긁음 기록 조회
         DailyScratchResponse scratch =
                 dailyScratchService.getDaily(userId, date, zoneId);
 
-        // 4. 해당 날짜의 환경 정보 조회
+        // 시간대별 긁음 분석
+        DailyAnalysisResponse dailyAnalysis =
+                dailyAnalysisService.getDailyAnalysis(
+                        userId,
+                        date,
+                        zoneId
+                );
+
+        // 최근 7일 긁음 분석
+        WeeklyAnalysisResponse weeklyAnalysis =
+                dailyAnalysisService.getWeeklyAnalysis(
+                        userId,
+                        date,
+                        zoneId
+                );
+
+        // 최근 환경 정보 조회
         EnvironmentData environment =
                 environmentDataRepository
-                        .findByChildIdAndDate(child.getId(), date)
+                        .findTopByChildIdOrderByRecordedAtDesc(child.getId())
                         .orElse(null);
 
-        // 5. 식단 정보 정리
+        // 식단 정보 정리
         String meals = buildMealsText(dailyLogs);
 
-        // 6. 일상 특이사항 정리
+        // 일상 특이사항 정리
         String dailyNotes = buildDailyNotesText(dailyLogs);
 
         // 7. 환경 정보
@@ -68,11 +97,24 @@ public class AnalysisService {
         String airQuality =
                 environment != null ? environment.getAirQuality() : null;
 
-        // 8. OpenAI 분석 요청
+        String hourlyScratchText =
+                buildHourlyScratchText(dailyAnalysis);
+
+        String weeklyScratchText =
+                buildWeeklyScratchText(weeklyAnalysis);
+
+        // 최근 7일 식단 정보 정리
+        String weeklyMealsText =
+                buildWeeklyMealsText(weeklyLogs);
+
+        // OpenAI 분석 요청
         return openAIService.analyze(
                 Math.toIntExact(scratch.eventCount()),
                 scratch.totalSeconds().doubleValue(),
+                hourlyScratchText,
+                weeklyScratchText,
                 meals,
+                weeklyMealsText,
                 dailyNotes,
                 temperature,
                 humidity,
@@ -143,4 +185,92 @@ public class AnalysisService {
                 ? "기록 없음"
                 : result;
     }
+
+    private String buildHourlyScratchText(
+            DailyAnalysisResponse analysis
+    ) {
+
+        if (analysis == null || analysis.scratchCount() == 0) {
+            return "긁음 기록 없음";
+        }
+
+        String hourlyText = analysis.hourly().stream()
+                .filter(item -> item.count() > 0)
+                .map(item ->
+                        String.format(
+                                "%02d시: %d회",
+                                item.hour(),
+                                item.count()
+                        )
+                )
+                .collect(Collectors.joining("\n"));
+
+        String peakText =
+                analysis.peakHour() != null
+                        ? String.format(
+                        "가장 많이 긁은 시간대: %02d시",
+                        analysis.peakHour()
+                )
+                        : "가장 많이 긁은 시간대: 없음";
+
+        return peakText + "\n" + hourlyText;
+    }
+
+    private String buildWeeklyScratchText(
+            WeeklyAnalysisResponse analysis
+    ) {
+
+        if (analysis == null) {
+            return "주간 기록 없음";
+        }
+
+        String dailyText = analysis.daily().stream()
+                .map(item ->
+                        String.format(
+                                "%s: %d회",
+                                item.date(),
+                                item.count()
+                        )
+                )
+                .collect(Collectors.joining("\n"));
+
+        return String.format(
+                """
+                분석 기간: %s ~ %s
+                최근 7일 총 긁음: %d회
+                최근 7일 일평균: %.2f회
+    
+                날짜별 기록:
+                %s
+                """,
+                analysis.startDate(),
+                analysis.endDate(),
+                analysis.totalCount(),
+                analysis.dailyAverage(),
+                dailyText
+        );
+    }
+
+    private String buildWeeklyMealsText(List<DailyLog> weeklyLogs) {
+
+        if (weeklyLogs == null || weeklyLogs.isEmpty()) {
+            return "주간 식단 기록 없음";
+        }
+
+        return weeklyLogs.stream()
+                .filter(log ->
+                        log.getFoods() != null &&
+                                !log.getFoods().isEmpty()
+                )
+                .map(log ->
+                        log.getDate()
+                                + " | "
+                                + log.getMealType()
+                                + " | "
+                                + log.getFoods()
+                )
+                .collect(Collectors.joining("\n"));
+    }
+
+
 }

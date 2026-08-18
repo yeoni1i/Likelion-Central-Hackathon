@@ -21,10 +21,10 @@ public class DevicePairingController {
 
     @PostMapping("/pairing-codes")
     public ResponseEntity<PairingCodeResponse> createPairingCode(
-            @RequestParam Long parentUserId
+            @RequestParam Long childId
     ) {
         return ResponseEntity.ok(
-                devicePairingService.createPairingCode(parentUserId)
+                devicePairingService.createPairingCode(childId)
         );
     }
 

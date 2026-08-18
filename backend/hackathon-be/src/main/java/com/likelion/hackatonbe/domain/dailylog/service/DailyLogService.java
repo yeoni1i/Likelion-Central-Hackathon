@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -116,11 +117,15 @@ public class DailyLogService {
         return new DailyLogDto.Response(
                 log.getId(),
                 log.getMealType(),
-                log.getFoods(),
+                log.getFoods() != null
+                        ? new java.util.ArrayList<>(log.getFoods())
+                        : java.util.List.of(),
                 log.getImageUrl(),
                 log.getShowerCount(),
                 log.getMoisturizerCount(),
-                log.getSymptoms(),
+                log.getSymptoms() != null
+                        ? new java.util.ArrayList<>(log.getSymptoms())
+                        : java.util.List.of(),
                 log.getMemo(),
                 log.getDate()
         );

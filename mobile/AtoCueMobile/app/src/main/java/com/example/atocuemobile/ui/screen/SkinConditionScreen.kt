@@ -19,8 +19,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,8 +38,10 @@ import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.ui.component.OnboardingProgressBar
 import com.example.atocuemobile.ui.component.PrimaryButton
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
-import com.example.atocuemobile.ui.theme.Pretendard
-import com.example.atocuemobile.ui.theme.TitleBlack
+
+// 💡 색상 및 폰트 변수 선언부 (이 부분이 누락되어 있었어요!)
+private val TitleBlack = Color(0xFF000000)
+private val Pretendard = FontFamily.Default
 
 private val SelectedBg = Color(0x265398FF)
 private val SelectedBorder = Color(0x595398FF)

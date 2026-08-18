@@ -9,11 +9,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.atocuemobile.ui.theme.PrimaryBlue
+
+
+private val PrimaryBlueColor = Color(0xFF5398FF)
 
 @Composable
 fun PrimaryButton(
@@ -26,10 +29,10 @@ fun PrimaryButton(
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlueColor),
         contentPadding = PaddingValues(vertical = 14.dp, horizontal = 20.dp),
         modifier = modifier
-            .fillMaxWidth() // 👈 입력창 가로 길이와 완전히 똑같이 맞춤
+            .fillMaxWidth()
             .height(60.dp)
     ) {
         Text(

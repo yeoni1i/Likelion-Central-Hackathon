@@ -6,14 +6,14 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-//스웨거 HTTP Bearer 인증 처리
+
 @Configuration
 public class OpenApiConfig {
 
     @Bean
     public OpenAPI openAPI() {
 
-        String securitySchemeName = "Bearer Authentication";
+        String securitySchemeName = "bearerAuth";
 
         return new OpenAPI()
                 .addSecurityItem(

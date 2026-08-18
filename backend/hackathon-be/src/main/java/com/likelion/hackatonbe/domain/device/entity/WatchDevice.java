@@ -1,5 +1,6 @@
 package com.likelion.hackatonbe.domain.device.entity;
 
+import com.likelion.hackatonbe.domain.user.entity.Child;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -26,14 +27,16 @@ public class WatchDevice {
     @Column(nullable = false)
     private String deviceName;
 
-    @Column(nullable = false)
-    private Long parentUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "child_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_watch_device_child")
+    )
+    private Child child;
 
     @Column(nullable = false)
     private LocalDateTime pairedAt;
-
-    @Column(nullable = false)
-    private boolean active;
 
     protected WatchDevice() {
     }
@@ -41,25 +44,23 @@ public class WatchDevice {
     public WatchDevice(
             String deviceIdentifier,
             String deviceName,
-            Long parentUserId,
+            Child child,
             LocalDateTime pairedAt
     ) {
         this.deviceIdentifier = deviceIdentifier;
         this.deviceName = deviceName;
-        this.parentUserId = parentUserId;
+        this.child = child;
         this.pairedAt = pairedAt;
-        this.active = true;
     }
 
     public void reconnect(
-            Long parentUserId,
+            Child child,
             String deviceName,
             LocalDateTime pairedAt
     ) {
-        this.parentUserId = parentUserId;
+        this.child = child;
         this.deviceName = deviceName;
         this.pairedAt = pairedAt;
-        this.active = true;
     }
 
     public Long getId() {
@@ -74,15 +75,11 @@ public class WatchDevice {
         return deviceName;
     }
 
-    public Long getParentUserId() {
-        return parentUserId;
+    public Child getChild() {
+        return child;
     }
 
     public LocalDateTime getPairedAt() {
         return pairedAt;
-    }
-
-    public boolean isActive() {
-        return active;
     }
 }

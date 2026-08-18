@@ -85,7 +85,7 @@ private fun AppRoot() {
                 loggedInUserId = userId
                 authToken = token
                 RetrofitClient.accessToken = token
-                currentScreen = AppScreen.MAIN
+                currentScreen = AppScreen.PERMISSION
             },
             onNavigateToSignUp = {
                 currentScreen = AppScreen.SIGN_UP
@@ -122,7 +122,7 @@ private fun AppRoot() {
         )
 
         AppScreen.ONBOARDING_SKIN -> SkinConditionScreen(
-            onNext = { conditions ->
+            onNext = { conditions: List<String> ->
                 onboardingViewModel.selectedConditions.clear()
                 onboardingViewModel.selectedConditions.addAll(conditions)
                 currentScreen = AppScreen.ONBOARDING_NOTES
@@ -131,7 +131,7 @@ private fun AppRoot() {
         )
 
         AppScreen.ONBOARDING_NOTES -> SpecialNotesScreen(
-            onNext = { notes ->
+            onNext = { notes: String ->
                 onboardingViewModel.specialNote = notes
                 val token = authToken ?: ""
 
@@ -155,10 +155,12 @@ private fun AppRoot() {
 
         AppScreen.MAIN -> {
             val currentUserId = loggedInUserId ?: 1L
+            val currentChildId = 1L
             val parentName = onboardingViewModel.parentName.ifBlank { "보호자" }
 
             MainHomeScreenContainer(
                 userId = currentUserId,
+                childId = currentChildId,
                 parentName = parentName,
                 onNavigateToConnectWatch = {
                     currentScreen = AppScreen.CONNECT_WATCH
@@ -174,12 +176,14 @@ private fun AppRoot() {
 
         AppScreen.CONNECT_WATCH -> {
             val currentUserId = loggedInUserId ?: 1L
-            val homeViewModel: HomeViewModel = remember(currentUserId) {
-                HomeViewModel(userId = currentUserId, initialDeviceConnected = false)
+            val currentChildId = 1L
+
+            val homeViewModel: HomeViewModel = remember(currentUserId, currentChildId) {
+                HomeViewModel(userId = currentUserId, childId = currentChildId, initialDeviceConnected = false)
             }
             val uiState by homeViewModel.uiState.collectAsState()
 
-            LaunchedEffect(currentUserId) {
+            LaunchedEffect(currentUserId, currentChildId) {
                 homeViewModel.fetchPairingCode()
             }
 
@@ -200,18 +204,19 @@ private fun AppRoot() {
 @Composable
 private fun MainHomeScreenContainer(
     userId: Long,
+    childId: Long,
     parentName: String,
     onNavigateToConnectWatch: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val homeViewModel: HomeViewModel = remember(userId) {
-        HomeViewModel(userId = userId, initialDeviceConnected = false)
+    val homeViewModel: HomeViewModel = remember(userId, childId) {
+        HomeViewModel(userId = userId, childId = childId, initialDeviceConnected = false)
     }
 
     val uiState by homeViewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(BottomNavTab.HOME) }
 
-    LaunchedEffect(userId) {
+    LaunchedEffect(userId, childId) {
         homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
         homeViewModel.fetchPairingCode()
         homeViewModel.loadToday()
