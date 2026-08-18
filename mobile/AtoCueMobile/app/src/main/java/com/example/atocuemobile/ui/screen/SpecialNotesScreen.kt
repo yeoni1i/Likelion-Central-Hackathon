@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -29,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,10 +44,11 @@ private val TextGrayColor = Color(0xFF6C6E72)
 
 @Composable
 fun SpecialNotesScreen(
-    onNext: () -> Unit,
+    onNext: (specialNote: String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var textInput by remember { mutableStateOf("") }
+    // 한글 입력을 위해 TextFieldValue로 초기화
+    var textInput by remember { mutableStateOf(TextFieldValue("")) }
     val maxChar = 500
 
     Column(
@@ -55,7 +56,6 @@ fun SpecialNotesScreen(
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding()
     ) {
         Row(
             modifier = Modifier
@@ -109,7 +109,7 @@ fun SpecialNotesScreen(
                     .border(1.dp, BorderGray, RoundedCornerShape(8.dp))
                     .padding(16.dp)
             ) {
-                if (textInput.isEmpty()) {
+                if (textInput.text.isEmpty()) {
                     Column {
                         Text(
                             text = "아이의 피부질환 중 특이한 사항 혹은\n알레르기, 건강사항을 적어주세요",
@@ -140,7 +140,7 @@ fun SpecialNotesScreen(
                 BasicTextField(
                     value = textInput,
                     onValueChange = {
-                        if (it.length <= maxChar) textInput = it
+                        if (it.text.length <= maxChar) textInput = it
                     },
                     textStyle = TextStyle(
                         fontFamily = Pretendard,
@@ -152,7 +152,7 @@ fun SpecialNotesScreen(
                 )
 
                 Text(
-                    text = "${textInput.length}/$maxChar",
+                    text = "${textInput.text.length}/$maxChar",
                     style = TextStyle(
                         fontFamily = Pretendard,
                         fontSize = 12.sp,
@@ -167,7 +167,9 @@ fun SpecialNotesScreen(
             PrimaryButton(
                 text = "다음",
                 enabled = true,
-                onClick = onNext
+                onClick = {
+                    onNext(textInput.text)
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))

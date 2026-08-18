@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -26,7 +25,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,7 +42,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -51,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -63,29 +62,28 @@ import com.example.atocuemobile.ui.theme.LabelGray
 import com.example.atocuemobile.ui.theme.Pretendard
 import com.example.atocuemobile.ui.theme.PrimaryBlue
 import com.example.atocuemobile.ui.theme.TitleBlack
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChildInfoScreen(
-    onNext: () -> Unit,
+    onNext: (name: String, birth: String, height: String, weight: String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var nameInput by remember { mutableStateOf("") }
+    // 한글 및 숫자 입력을 위해 TextFieldValue 사용
+    var nameInput by remember { mutableStateOf(TextFieldValue("")) }
     var selectedYear by remember { mutableIntStateOf(2019) }
     var selectedMonth by remember { mutableIntStateOf(7) }
     var selectedDay by remember { mutableIntStateOf(13) }
     var isDatePicked by remember { mutableStateOf(false) }
 
-    var heightInput by remember { mutableStateOf("") }
-    var weightInput by remember { mutableStateOf("") }
+    var heightInput by remember { mutableStateOf(TextFieldValue("")) }
+    var weightInput by remember { mutableStateOf(TextFieldValue("")) }
 
     var showDatePickerSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
-    val birthText = if (isDatePicked) {
+    val birthDisplay = if (isDatePicked) {
         "${selectedYear}.${selectedMonth.toString().padStart(2, '0')}.${selectedDay.toString().padStart(2, '0')}"
     } else ""
 
@@ -94,7 +92,6 @@ fun ChildInfoScreen(
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .imePadding()
     ) {
         Row(
             modifier = Modifier
@@ -161,7 +158,7 @@ fun ChildInfoScreen(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(
-                        text = birthText,
+                        text = birthDisplay,
                         style = TextStyle(fontSize = 14.sp, color = TitleBlack)
                     )
                 }
@@ -191,10 +188,16 @@ fun ChildInfoScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            val formattedBirth = if (isDatePicked) {
+                String.format("%04d-%02d-%02d", selectedYear, selectedMonth, selectedDay)
+            } else ""
+
             PrimaryButton(
                 text = "다음",
                 enabled = true,
-                onClick = onNext
+                onClick = {
+                    onNext(nameInput.text, formattedBirth, heightInput.text, weightInput.text)
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -249,8 +252,8 @@ private fun ChildInputRow(
 
 @Composable
 private fun ChildInputField(
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
     unit: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
@@ -271,7 +274,11 @@ private fun ChildInputField(
                 onValueChange = onValueChange,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                textStyle = TextStyle(fontSize = 15.sp, color = TitleBlack),
+                textStyle = TextStyle(
+                    fontFamily = Pretendard,
+                    fontSize = 15.sp,
+                    color = TitleBlack
+                ),
                 modifier = Modifier.weight(1f)
             )
             if (unit != null) {
@@ -394,18 +401,13 @@ private fun WheelPickerColumn(
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
     val coroutineScope = rememberCoroutineScope()
 
-    var selectedIndex by remember { mutableIntStateOf(initialIndex) }
-
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }
-            .filter { !it }
-            .collectLatest {
-                val index = listState.firstVisibleItemIndex
-                if (index in items.indices) {
-                    selectedIndex = index
-                    onItemSelected(items[index])
-                }
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            val centerIndex = listState.firstVisibleItemIndex
+            if (centerIndex in items.indices) {
+                onItemSelected(items[centerIndex])
             }
+        }
     }
 
     Box(
@@ -422,15 +424,13 @@ private fun WheelPickerColumn(
         ) {
             items(items.size) { index ->
                 val item = items[index]
-                val isSelected = index == selectedIndex
+                val isSelected = index == listState.firstVisibleItemIndex
 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(itemHeight)
                         .clickable {
-                            selectedIndex = index
-                            onItemSelected(items[index])
                             coroutineScope.launch {
                                 listState.animateScrollToItem(index)
                             }
@@ -443,7 +443,7 @@ private fun WheelPickerColumn(
                     ) {
                         if (isSelected) {
                             Icon(
-                                imageVector = Icons.Default.Check,
+                                imageVector = Icons.Default.Done,
                                 contentDescription = null,
                                 tint = Color.Black,
                                 modifier = Modifier
@@ -500,7 +500,7 @@ private fun WheelPickerColumn(
 fun ChildInfoScreenPreview() {
     AtoCueMobileTheme {
         ChildInfoScreen(
-            onNext = {},
+            onNext = { _, _, _, _ -> },
             onNavigateBack = {}
         )
     }

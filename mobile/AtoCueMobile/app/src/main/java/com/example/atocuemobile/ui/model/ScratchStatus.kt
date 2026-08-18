@@ -21,7 +21,7 @@ enum class ScratchStatus(
 
     // 2단계: 보통
     NORMAL(
-        heroTitle = "주의가 필요해요",
+        heroTitle = "약한 긁음 감지됨",
         badgeLabel = "보통",
         badgeBgColor = Color(0x265398FF), // rgba(83, 152, 255, 0.15)
         badgeTextColor = Color(0xFF5398FF),
@@ -30,7 +30,7 @@ enum class ScratchStatus(
 
     // 3단계: 경고
     WARNING(
-        heroTitle = "긁음이 지속되고 있어요",
+        heroTitle = "비교적 강한 긁음 감지됨",
         badgeLabel = "경고",
         badgeBgColor = Color(0x33FFC529), // #FFC52933
         badgeTextColor = Color(0xFFFFBC00),
@@ -39,7 +39,7 @@ enum class ScratchStatus(
 
     // 4단계: 위험
     DANGER(
-        heroTitle = "심한 긁음이 감지되었어요",
+        heroTitle = "강한 긁음 감지됨",
         badgeLabel = "위험",
         badgeBgColor = Color(0x26FF6831), // #FF683126
         badgeTextColor = Color(0xFFF8703E),
@@ -48,8 +48,8 @@ enum class ScratchStatus(
 
     // 5단계: 매우위험
     VERY_DANGER(
-        heroTitle = "즉각적인 조치가 필요해요",
-        badgeLabel = "매우위험",
+        heroTitle = "매우 강한 긁음 감지됨",
+        badgeLabel = "매우 위험",
         badgeBgColor = Color(0x33EE4444), // #EE444433
         badgeTextColor = Color(0xFFEE4444),
         cloudImageRes = R.drawable.five
@@ -64,7 +64,7 @@ enum class ScratchStatus(
                 "NORMAL", "보통", "2" -> 2
                 "WARNING", "경고", "주의", "3" -> 3
                 "DANGER", "위험", "4" -> 4
-                "VERY_DANGER", "매우위험", "5" -> 5
+                "VERY_DANGER", "매우 위험", "5" -> 5
                 else -> 1
             }
 

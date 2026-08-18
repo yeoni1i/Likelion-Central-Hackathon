@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -50,9 +51,11 @@ private val DividerColor = Color(0xFFF2F2F4)
 
 @Composable
 fun MyPageScreen(
-    guardianName: String = "보호자의 이름",
+    guardianName: String = "보호자",
+    pairingCode: String = "123456",
     selectedTab: BottomNavTab = BottomNavTab.MY,
     onTabSelected: (BottomNavTab) -> Unit = {},
+    onDeviceManageClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
     var showDeviceManagementModal by remember { mutableStateOf(false) }
@@ -72,11 +75,12 @@ fun MyPageScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // 1. 상단 로고 헤더
+                // 1. 상단 로고 헤더 (홈화면과 동일하게 statusBarsPadding 및 패딩, 크기 동기화)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 0.dp),
+                        .statusBarsPadding()
+                        .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 0.dp),
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -84,13 +88,13 @@ fun MyPageScreen(
                         painter = painterResource(id = R.drawable.atocue),
                         contentDescription = "AtoCue Logo",
                         contentScale = ContentScale.FillHeight,
-                        modifier = Modifier.height(15.dp)
+                        modifier = Modifier.height(16.dp) // 홈화면 로고 높이(16.dp)와 동일하게 맞춤
                     )
                 }
 
                 Spacer(modifier = Modifier.height(35.dp))
 
-                // 2. 프로필 영역 (왼쪽으로 한 번 더 바짝 끌어당김)
+                // 2. 프로필 영역
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -98,10 +102,9 @@ fun MyPageScreen(
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 이미지 음수 오프셋을 -28dp로 확대하여 더 좌측 밀착
                     Box(
                         modifier = Modifier
-                            .offset(x = (-28).dp) // ⭐ 왼쪽으로 더 밀착
+                            .offset(x = (-28).dp)
                             .size(130.dp)
                             .clip(CircleShape),
                         contentAlignment = Alignment.Center
@@ -114,9 +117,8 @@ fun MyPageScreen(
                         )
                     }
 
-                    // 텍스트도 -24dp 당겨서 프로필 사진에 오붓하게 붙임
                     Column(
-                        modifier = Modifier.offset(x = (-24).dp), // ⭐ 텍스트 영역도 왼쪽으로 더 밀착
+                        modifier = Modifier.offset(x = (-24).dp),
                         horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -162,7 +164,10 @@ fun MyPageScreen(
                     ) {
                         MyPageMenuItem(
                             title = "기기 관리",
-                            onClick = { showDeviceManagementModal = true }
+                            onClick = {
+                                onDeviceManageClick()
+                                showDeviceManagementModal = true
+                            }
                         )
 
                         HorizontalDivider(
@@ -180,11 +185,11 @@ fun MyPageScreen(
             }
         }
 
-        // 기기 관리 모달
+        // 기기 관리 모달 (6자리 페어링 코드 연동)
         if (showDeviceManagementModal) {
             ConnectWatchScreen(
                 title = "기기 관리",
-                code = "12345",
+                code = pairingCode,
                 onBackClick = { showDeviceManagementModal = false }
             )
         }
@@ -228,6 +233,6 @@ private fun MyPageMenuItem(
 @Composable
 fun MyPageScreenPreview() {
     AtoCueMobileTheme {
-        MyPageScreen()
+        MyPageScreen(guardianName = "홍길동")
     }
 }

@@ -19,8 +19,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,7 +49,7 @@ private val UnselectedText = Color(0xFF000000)
 
 @Composable
 fun SkinConditionScreen(
-    onNext: () -> Unit,
+    onNext: (conditions: List<String>) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val conditions = listOf(
@@ -155,7 +155,7 @@ fun SkinConditionScreen(
 
                             if (isSelected) {
                                 Icon(
-                                    imageVector = Icons.Default.Check,
+                                    imageVector = Icons.Default.Done,
                                     contentDescription = null,
                                     tint = SelectedText
                                 )
@@ -170,7 +170,9 @@ fun SkinConditionScreen(
             PrimaryButton(
                 text = "다음",
                 enabled = true,
-                onClick = onNext
+                onClick = {
+                    onNext(selectedConditions.toList())
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))

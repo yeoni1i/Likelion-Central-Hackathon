@@ -32,15 +32,14 @@ import com.example.atocuemobile.ui.component.PrimaryButton
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
 import com.example.atocuemobile.ui.theme.Pretendard
 import com.example.atocuemobile.ui.theme.TitleBlack
-
+import androidx.compose.ui.text.input.TextFieldValue
 @Composable
 fun ParentInfoScreen(
-    onNext: () -> Unit,
+    onNext: (parentName: String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var nameInput by remember { mutableStateOf("") }
+    var nameInput by remember { mutableStateOf(TextFieldValue("")) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -111,11 +110,11 @@ fun ParentInfoScreen(
                 text = "다음",
                 enabled = true,
                 onClick = {
-                    if (nameInput.isBlank()) {
+                    if (nameInput.text.isBlank()) {
                         errorMessage = "이름을 입력해주세요."
                         return@PrimaryButton
                     }
-                    onNext()
+                    onNext(nameInput.text)
                 }
             )
 

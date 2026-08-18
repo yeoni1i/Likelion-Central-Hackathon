@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import com.example.atocuemobile.ui.component.AuthTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,25 +22,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.network.RetrofitClient
 import com.example.atocuemobile.network.dto.SignUpRequest
+import com.example.atocuemobile.ui.component.AuthTextField
 import com.example.atocuemobile.ui.component.PrimaryButton
+import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
 import com.example.atocuemobile.ui.theme.Pretendard
 import com.example.atocuemobile.ui.theme.TitleBlack
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
 @Composable
 fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var idInput by remember { mutableStateOf("") }
-    var passwordInput by remember { mutableStateOf("") }
+    var idInput by remember { mutableStateOf(TextFieldValue("")) }
+    var passwordInput by remember { mutableStateOf(TextFieldValue("")) }
     var idError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -51,7 +51,7 @@ fun SignUpScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding() // 👈 화면 전체를 상단바 아래로 내림
+            .statusBarsPadding()
     ) {
         Row(
             modifier = Modifier
@@ -104,17 +104,17 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             PrimaryButton(
-                text = if (isLoading) "가입 중..." else "회원가입", // 시안대로 텍스트 변경
+                text = if (isLoading) "가입 중..." else "회원가입",
                 enabled = !isLoading,
                 onClick = {
                     idError = null
                     passwordError = null
 
-                    if (idInput.isBlank()) {
+                    if (idInput.text.isBlank()) {
                         idError = "아이디를 입력해주세요."
                         return@PrimaryButton
                     }
-                    if (!passwordRule.matches(passwordInput)) {
+                    if (!passwordRule.matches(passwordInput.text)) {
                         passwordError = "비밀번호는 영문+숫자 8~16자 조합이어야합니다."
                         return@PrimaryButton
                     }
@@ -122,18 +122,22 @@ fun SignUpScreen(
                     isLoading = true
                     scope.launch {
                         try {
-                            RetrofitClient.api.signUp(
-                                SignUpRequest(username = idInput, password = passwordInput)
+                            val response = RetrofitClient.api.signUp(
+                                SignUpRequest(username = idInput.text, password = passwordInput.text)
                             )
-                            onSignUpSuccess()
-                        } catch (e: HttpException) {
-                            when (e.code()) {
-                                409 -> idError = "이미 존재하는 아이디입니다."
-                                400 -> passwordError = "비밀번호는 영문+숫자 8~16자 조합이어야합니다."
-                                else -> idError = "회원가입에 실패했습니다. 다시 시도해주세요."
+
+                            if (response.isSuccessful) {
+                                onSignUpSuccess()
+                            } else {
+                                val errorText = response.errorBody()?.string() ?: ""
+                                when (response.code()) {
+                                    409 -> idError = "이미 존재하는 아이디입니다."
+                                    400 -> passwordError = "비밀번호는 영문+숫자 8~16자 조합이어야합니다."
+                                    else -> idError = "가입 실패 (${response.code()}): $errorText"
+                                }
                             }
                         } catch (e: Exception) {
-                            idError = "네트워크 오류가 발생했습니다. 연결을 확인해주세요."
+                            idError = "네트워크 연결 오류: ${e.localizedMessage}"
                         } finally {
                             isLoading = false
                         }
@@ -143,7 +147,6 @@ fun SignUpScreen(
         }
     }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,27 +18,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.network.RetrofitClient
 import com.example.atocuemobile.network.dto.LoginRequest
+import com.example.atocuemobile.ui.component.AuthTextField
 import com.example.atocuemobile.ui.component.PrimaryButton
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
 import com.example.atocuemobile.ui.theme.LinkGray
 import com.example.atocuemobile.ui.theme.TitleBlack
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import com.example.atocuemobile.ui.component.AuthTextField
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: (userId: Long, token: String) -> Unit,
     onNavigateToSignUp: () -> Unit
 ) {
-    var idInput by remember { mutableStateOf("") }
-    var passwordInput by remember { mutableStateOf("") }
+    var idInput by remember { mutableStateOf(TextFieldValue("")) }
+    var passwordInput by remember { mutableStateOf(TextFieldValue("")) }
     var idError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -51,7 +51,6 @@ fun LoginScreen(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 상단 여백만 부여하여 전체 UI를 위로 배치
         Spacer(modifier = Modifier.height(100.dp))
 
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -66,7 +65,6 @@ fun LoginScreen(
             )
 
             Spacer(modifier = Modifier.height(32.dp))
-
 
             AuthTextField(
                 value = idInput,
@@ -95,11 +93,11 @@ fun LoginScreen(
                     idError = null
                     passwordError = null
 
-                    if (idInput.isBlank()) {
+                    if (idInput.text.isBlank()) {
                         idError = "아이디를 입력해주세요."
                         return@PrimaryButton
                     }
-                    if (passwordInput.isBlank()) {
+                    if (passwordInput.text.isBlank()) {
                         passwordError = "비밀번호를 입력해주세요."
                         return@PrimaryButton
                     }
@@ -108,7 +106,7 @@ fun LoginScreen(
                     scope.launch {
                         try {
                             val response = RetrofitClient.api.login(
-                                LoginRequest(username = idInput, password = passwordInput)
+                                LoginRequest(username = idInput.text, password = passwordInput.text)
                             )
                             onLoginSuccess(response.userId, response.token)
                         } catch (e: HttpException) {

@@ -2,12 +2,14 @@ package com.example.atocuemobile.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -21,10 +23,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.items
-import com.example.atocuemobile.network.dto.ScratchTimelineResponse
 import com.example.atocuemobile.network.RetrofitClient
+import com.example.atocuemobile.network.dto.ScratchTimelineResponse
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -111,8 +111,9 @@ fun ScratchTestScreen() {
                     statusMessage = "조회 중..."
 
                     try {
+                        // 👈 getScratchEvents -> getScratchTimeline으로 수정
                         val response =
-                            RetrofitClient.api.getScratchEvents(
+                            RetrofitClient.api.getScratchTimeline(
                                 userId = parsedUserId,
                                 date = cleanDate,
                                 timezone = "Asia/Seoul"
@@ -159,7 +160,7 @@ fun ScratchTestScreen() {
                         ) {
                             Column {
                                 Text(
-                                    text = event.startTs,
+                                    text = event.startTs.toString(),
                                     style = MaterialTheme.typography.titleMedium
                                 )
 

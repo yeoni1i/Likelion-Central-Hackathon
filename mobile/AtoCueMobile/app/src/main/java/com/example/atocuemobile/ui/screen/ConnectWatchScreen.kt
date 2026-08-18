@@ -2,6 +2,8 @@ package com.example.atocuemobile.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,13 +19,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -37,27 +44,27 @@ import com.example.atocuemobile.ui.theme.Pretendard
 
 private val BaseBackgroundColor = Color(0xFFF6F7FB)
 private val NumberCardBorderColor = Color(0xFFEBEBEB)
+private val PrimaryBlueColor = Color(0xFF5398FF)
+private val GrayTextColor = Color(0xFF8E95A3)
 
-/**
- * 워치 연결 인증 번호 화면
- */
 @Composable
 fun ConnectWatchScreen(
     title: String = "워치연결",
-    code: String = "12345",
+    code: String = "------",
+    isLoading: Boolean = false,
+    onRefreshCode: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxSize(), // 배경색이 상태바 영역까지 꽉 차도록 여기서는 패딩을 주지 않음
+        modifier = Modifier.fillMaxSize(),
         color = BaseBackgroundColor
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding() // 콘텐츠(앱바)만 상태바 아래로 내림
+                .statusBarsPadding()
         ) {
-            // 상단 앱바
+            // 1. 상단 앱바
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -86,9 +93,9 @@ fun ConnectWatchScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(90.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
-            // 중앙 안내 문구 (글씨 크기 및 굵기 확대: 20sp -> 22sp)
+            // 2. 중앙 안내 문구
             Text(
                 text = "아래의 코드를 아이의\n워치에 입력해주세요",
                 style = TextStyle(
@@ -104,37 +111,100 @@ fun ConnectWatchScreen(
 
             Spacer(modifier = Modifier.height(36.dp))
 
-            // 5자리 숫자 카드 영역
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val digits = code.padEnd(5, ' ').take(5).toCharArray()
+            // 3. 6자리 숫자 카드 영역
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = PrimaryBlueColor,
+                        strokeWidth = 3.dp
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val cleanCode = code.filter { it.isDigit() }.padEnd(6, '-').take(6)
+                    val digits = cleanCode.toCharArray()
 
-                digits.forEachIndexed { index, char ->
-                    NumberCard(number = char.toString())
-                    if (index < digits.size - 1) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                    digits.forEachIndexed { index, char ->
+                        NumberCard(number = char.toString())
+                        if (index < digits.size - 1) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // 4. 유효시간 안내 및 재발급 버튼
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "코드는 5분간 유효합니다",
+                    style = TextStyle(
+                        fontFamily = Pretendard,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = GrayTextColor
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(bounded = true)
+                        ) {
+                            onRefreshCode()
+                        }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "재발급",
+                        tint = PrimaryBlueColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "코드 재발급",
+                        style = TextStyle(
+                            fontFamily = Pretendard,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryBlueColor
+                        )
+                    )
                 }
             }
         }
     }
 }
 
-/**
- * 개별 숫자 프레임 카드 (크기 확대)
- */
 @Composable
 private fun NumberCard(number: String) {
     Box(
         modifier = Modifier
-            .size(width = 56.dp, height = 68.dp) // 카드 전체 크기 확장
+            .size(width = 48.dp, height = 64.dp)
             .shadow(
-                elevation = 20.dp,
+                elevation = 16.dp,
                 shape = RoundedCornerShape(12.dp),
                 spotColor = Color(0x0D000000)
             )
@@ -146,9 +216,8 @@ private fun NumberCard(number: String) {
             text = number,
             style = TextStyle(
                 fontFamily = Pretendard,
-                fontSize = 38.sp, // 내부 숫자 폰트 크기 확대 (35sp -> 38sp)
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Medium,
-                lineHeight = 52.sp,
                 color = Color(0xFF000000),
                 textAlign = TextAlign.Center
             )
@@ -160,6 +229,6 @@ private fun NumberCard(number: String) {
 @Composable
 fun ConnectWatchScreenPreview() {
     AtoCueMobileTheme {
-        ConnectWatchScreen(code = "12345")
+        ConnectWatchScreen(code = "849201")
     }
 }

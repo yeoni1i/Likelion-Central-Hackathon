@@ -3,12 +3,16 @@ package com.example.atocuemobile.network
 import com.example.atocuemobile.network.dto.DailyScratchResponse
 import com.example.atocuemobile.network.dto.LoginRequest
 import com.example.atocuemobile.network.dto.LoginResponse
+import com.example.atocuemobile.network.dto.OnboardingRequest
 import com.example.atocuemobile.network.dto.PairDeviceRequest
 import com.example.atocuemobile.network.dto.PairDeviceResponse
 import com.example.atocuemobile.network.dto.PairingCodeResponse
+import com.example.atocuemobile.network.dto.ParentInfoRequest
 import com.example.atocuemobile.network.dto.ScratchTimelineResponse
 import com.example.atocuemobile.network.dto.SignUpRequest
 import com.example.atocuemobile.network.dto.WeatherResponse
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -18,19 +22,33 @@ import retrofit2.http.Query
 interface AtoCueApiService {
 
     // 1. 회원가입 & 로그인
-    @POST("api/users/signup")
+    @POST("accounts/signup_account")
     suspend fun signUp(
         @Body request: SignUpRequest
-    ): Any
+    ): Response<ResponseBody>
 
-    @POST("api/users/login")
+    @POST("accounts/")
     suspend fun login(
         @Body request: LoginRequest
     ): LoginResponse
 
-    // 2. 워치 페어링
+    // 2. 온보딩
+    @POST("accounts/parent_info")
+    suspend fun saveParentInfo(
+        @Header("Authorization") token: String,
+        @Body request: ParentInfoRequest
+    ): Response<ResponseBody>
+
+    @POST("accounts/signup_child")
+    suspend fun saveChildInfo(
+        @Header("Authorization") token: String,
+        @Body request: OnboardingRequest
+    ): Response<ResponseBody>
+
+    // 3. 워치 페어링 (토큰은 RetrofitClient 인터셉터가 자동 주입)
     @POST("devices/pairing-codes")
     suspend fun createPairingCode(
+        @Header("Authorization") token: String,
         @Query("parentUserId") parentUserId: Long
     ): PairingCodeResponse
 
@@ -39,7 +57,7 @@ interface AtoCueApiService {
         @Body request: PairDeviceRequest
     ): PairDeviceResponse
 
-    // 3. 긁음(Scratch) 데이터 조회
+    // 4. 긁음 데이터 통계 & 이벤트 (기존 테스트 파일 호환용 getScratchEvents 포함)
     @GET("scratch/reports/daily")
     suspend fun getDailyScratchReport(
         @Header("X-User-Id") userId: Long,
@@ -54,7 +72,6 @@ interface AtoCueApiService {
         @Query("timezone") timezone: String = "Asia/Seoul"
     ): ScratchTimelineResponse
 
-    // ScratchTestScreen용 이벤트 조회 함수 (반환형을 ScratchTimelineResponse로 지정)
     @GET("scratch/events")
     suspend fun getScratchEvents(
         @Header("X-User-Id") userId: Long,
@@ -62,11 +79,10 @@ interface AtoCueApiService {
         @Query("timezone") timezone: String = "Asia/Seoul"
     ): ScratchTimelineResponse
 
-    // 4. 날씨
+    // 5. 날씨 API
     @GET("weather")
     suspend fun getWeather(
         @Query("lat") lat: Double,
-        @Query("lon") lon: Double,
-        @Header("Authorization") token: String? = null
+        @Query("lon") lon: Double
     ): WeatherResponse
 }

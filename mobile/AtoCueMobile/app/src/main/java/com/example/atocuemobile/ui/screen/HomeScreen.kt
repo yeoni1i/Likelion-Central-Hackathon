@@ -37,6 +37,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -78,6 +79,7 @@ import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
 import com.example.atocuemobile.ui.theme.LabelGray
 import com.example.atocuemobile.ui.theme.Pretendard
 import com.example.atocuemobile.ui.theme.PrimaryBlue
+import com.example.atocuemobile.viewmodel.TimelineUiItem
 
 private val BaseBackgroundColor = Color(0xFFF6F7FB)
 private val DarkButtonBg = Color(0xFF36383D)
@@ -89,25 +91,22 @@ private val DateGrayColor = Color(0xFF999999)
 private val WeatherCardBorderColor = Color(0xFFF3F4F6)
 private val InfoBoxBgColor = Color(0xFFF2F4F7)
 private val LightTextGray = Color(0xFF9E9E9E)
+private val TimelineDividerColor = Color(0xFFE5E7EB)
 
-// 기기 연결 전 칩
 private val DisconnectedChipBg = Color(0xFFD0D6DD)
 private val DisconnectedChipDot = Color(0xFF6C6E72)
-
-// 기기 연결 후 칩
 private val ConnectedChipBg = Color(0x265398FF)
 private val ConnectedBlueColor = Color(0xFF397FE9)
 
 private val ActiveDotColor = Color(0xFF5398FF)
 private val InactiveDotColor = Color(0xFFD9D9D9)
 
-// 감지 상태 열거형
 enum class DetectionState {
-    NOT_CONNECTED, // 기기 연결 전
-    READY,         // 감지 시작 전 (start.png)
-    DETECTING,     // 실시간 감지 중 (구름 5단계)
-    PAUSED,        // 감지 일시중지 (stop.png)
-    BATTERY_LOW    // 배터리 부족으로 중지 (battery.png)
+    NOT_CONNECTED,
+    READY,
+    DETECTING,
+    PAUSED,
+    BATTERY_LOW
 }
 
 data class GuideMessage(
@@ -120,29 +119,37 @@ data class GuideMessage(
 fun HomeScreen(
     isDeviceConnected: Boolean = true,
     detectionState: DetectionState = DetectionState.DETECTING,
+    pairingCode: String = "123456",
     currentStatus: ScratchStatus = ScratchStatus.STABLE,
     totalScratchSeconds: Int = 0,
-    timeCriteriaText: String = "00월 00일 (수) | 00시 기준",
+    timeCriteriaText: String = "00월 00일 (수) 00시 기준",
     weatherData: WeatherResponse? = null,
     guideList: List<GuideMessage> = listOf(
-        GuideMessage("가이드 제목 1", "추후 백엔드 API 연동으로 맞춤 메시지가 표시되는 공간입니다."),
-        GuideMessage("가이드 제목 2", "추후 백엔드 API 연동으로 맞춤 메시지가 표시되는 공간입니다."),
-        GuideMessage("가이드 제목 3", "추후 백엔드 API 연동으로 맞춤 메시지가 표시되는 공간입니다.")
+        GuideMessage("실내습도 00%이상 유지", "오늘은 지난 3일보다 평균 기온이 높고 습도가 낮아요 실내에서는 적정한 온도와 높은 습도를 유지해주세요"),
+        GuideMessage(
+            title = "보습제 자주 덧바르기",
+            description = "외출 전후와 건조함을 느낄 때마다 보습제를 꼼꼼히 덧발라 피부 장벽을 보호해주세요"
+        ),
+        GuideMessage(
+            title = "미세먼지 차단 및 환기",
+            description = "공기 질 상태에 맞춰 적절한 환기를 진행하고 외출 시 마스크 착용을 권장합니다"
+        )
     ),
+
+    timelineItems: List<TimelineUiItem> = emptyList(),
     onConnectWatchClick: () -> Unit = {},
     onStartDetectionClick: () -> Unit = {},
     onStopDetectionClick: () -> Unit = {},
     onRestartDetectionClick: () -> Unit = {},
     onRefreshClick: () -> Unit = {},
-    onLifeLogClick: () -> Unit = {},  // 생활기록 클릭 콜백
-    onMealLogClick: () -> Unit = {},  // 식단기록 클릭 콜백
+    onLifeLogClick: () -> Unit = {},
+    onMealLogClick: () -> Unit = {},
     selectedTab: BottomNavTab = BottomNavTab.HOME,
     onTabSelected: (BottomNavTab) -> Unit = {}
 ) {
     var showConnectModal by remember { mutableStateOf(false) }
-    var isFabExpanded by remember { mutableStateOf(false) } // FAB 확장 여부 상태
+    var isFabExpanded by remember { mutableStateOf(false) }
 
-    // FAB 회전 애니메이션 (+ -> X)
     val fabRotation by animateFloatAsState(
         targetValue = if (isFabExpanded) 45f else 0f,
         label = "fabRotation"
@@ -233,7 +240,6 @@ fun HomeScreen(
                 // 2. 히어로 영역
                 when {
                     !isDeviceConnected || detectionState == DetectionState.NOT_CONNECTED -> {
-                        // [상태 0: 기기 연결 전]
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -293,7 +299,6 @@ fun HomeScreen(
                     }
 
                     detectionState == DetectionState.READY -> {
-                        // [상태 1: 기기 연결 완료 & 감지 시작 전]
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -372,7 +377,6 @@ fun HomeScreen(
                     }
 
                     detectionState == DetectionState.PAUSED -> {
-                        // [상태 2: 감지 일시중지]
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -449,7 +453,6 @@ fun HomeScreen(
                     }
 
                     detectionState == DetectionState.BATTERY_LOW -> {
-                        // [상태 3: 배터리 부족]
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -530,7 +533,6 @@ fun HomeScreen(
                     }
 
                     else -> {
-                        // [상태 4: 실시간 감지 중]
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -551,7 +553,6 @@ fun HomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.SpaceBetween
                             ) {
-                                // 1. 상단 타이틀 & 날짜시간
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.fillMaxWidth()
@@ -599,13 +600,12 @@ fun HomeScreen(
                                             Image(
                                                 painter = painterResource(id = R.drawable.refresh),
                                                 contentDescription = "새로고침",
-                                                modifier = Modifier.size(18.dp)
+                                                modifier = Modifier.size(16.dp)
                                             )
                                         }
                                     }
                                 }
 
-                                // 2. 중앙 구름 캐릭터 + 배지 영역
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center
@@ -617,48 +617,33 @@ fun HomeScreen(
                                         contentScale = ContentScale.Fit
                                     )
 
-                                    Spacer(modifier = Modifier.height(26.dp))
+                                    Spacer(modifier = Modifier.height(20.dp))
 
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
+                                    Surface(
+                                        color = currentStatus.badgeBgColor,
+                                        shape = RoundedCornerShape(20.dp),
+                                        modifier = Modifier
+                                            .width(86.dp)
+                                            .height(36.dp)
                                     ) {
-                                        Surface(
-                                            color = currentStatus.badgeBgColor,
-                                            shape = RoundedCornerShape(5.dp)
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.fillMaxSize()
                                         ) {
                                             Text(
                                                 text = currentStatus.badgeLabel,
                                                 style = TextStyle(
                                                     fontFamily = Pretendard,
-                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     fontSize = 16.sp,
-                                                    lineHeight = 24.sp,
                                                     color = currentStatus.badgeTextColor,
                                                     textAlign = TextAlign.Center
-                                                ),
-                                                modifier = Modifier.padding(
-                                                    horizontal = if (currentStatus == ScratchStatus.VERY_DANGER) 5.dp else 10.dp,
-                                                    vertical = 2.dp
                                                 )
                                             )
                                         }
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        Text(
-                                            text = "긁음 ${totalScratchSeconds}초 지속",
-                                            style = TextStyle(
-                                                fontFamily = Pretendard,
-                                                fontWeight = FontWeight.Medium,
-                                                fontSize = 18.sp,
-                                                color = Color(0xFF000000)
-                                            )
-                                        )
                                     }
                                 }
 
-                                // 3. 하단 와이드 감지 중지 버튼
                                 Button(
                                     onClick = onStopDetectionClick,
                                     colors = ButtonDefaults.buttonColors(containerColor = DarkButtonBg),
@@ -837,21 +822,42 @@ fun HomeScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        if (isDeviceConnected) {
+                        if (isDeviceConnected && timelineItems.isNotEmpty()) {
+                            val groupedItems = timelineItems.groupBy { it.hourLabel }
+                            groupedItems.forEach { (hour, items) ->
+                                TimelineSectionGroup(time = hour) {
+                                    items.forEach { item ->
+                                        TimelineCard(
+                                            status = item.status.badgeLabel,
+                                            statusColor = item.status.badgeTextColor,
+                                            iconRes = item.status.cloudImageRes,
+                                            timeRange = item.timeRangeLabel,
+                                            duration = item.durationLabel
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        } else if (isDeviceConnected) {
                             TimelineSectionGroup(time = "11:00\nAM") {
-                                TimelineCard(status = "안정", duration = "00분", iconRes = R.drawable.verygood)
-                                Spacer(modifier = Modifier.height(10.dp))
-                                TimelineCard(status = "보통", duration = "00분", iconRes = R.drawable.good)
+                                TimelineCard(status = "안정", statusColor = Color(0xFF22C55E), iconRes = R.drawable.verygood, timeRange = "00:00~00:00", duration = "00분")
+                                TimelineCard(status = "보통", statusColor = Color(0xFF3B82F6), iconRes = R.drawable.good, timeRange = "00:00~00:00", duration = "00분")
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             TimelineSectionGroup(time = "10:00\nAM") {
-                                TimelineCard(status = "주의", duration = "00분", iconRes = R.drawable.bad)
-                                Spacer(modifier = Modifier.height(10.dp))
-                                TimelineCard(status = "보통", duration = "00분", iconRes = R.drawable.good)
+                                TimelineCard(status = "주의", statusColor = Color(0xFFF59E0B), iconRes = R.drawable.bad, timeRange = "00:00~00:00", duration = "00분")
+                                TimelineCard(status = "보통", statusColor = Color(0xFF3B82F6), iconRes = R.drawable.good, timeRange = "00:00~00:00", duration = "00분")
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            TimelineSectionGroup(time = "09:00\nAM") {
+                                TimelineCard(status = "안정", statusColor = Color(0xFF22C55E), iconRes = R.drawable.verygood, timeRange = "00:00~00:00", duration = "00분")
+                                TimelineCard(status = "위험", statusColor = Color(0xFFEF4444), iconRes = R.drawable.verybad, timeRange = "00:00~00:00", duration = "00분")
                             }
                         } else {
                             Box(
@@ -875,7 +881,6 @@ fun HomeScreen(
                 }
             }
 
-            // [FAB 확장 시 나타나는 어두운 오버레이 배경]
             AnimatedVisibility(
                 visible = isFabExpanded,
                 enter = fadeIn(),
@@ -884,7 +889,7 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0x80000000)) // 반투명 블랙 오버레이
+                        .background(Color(0x80000000))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -894,7 +899,6 @@ fun HomeScreen(
                 )
             }
 
-            // [우측 하단 확장형 플로팅 메뉴 (Speed Dial FAB)]
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -902,7 +906,6 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // 1. 생활기록 & 식단기록 펼침 메뉴
                 AnimatedVisibility(
                     visible = isFabExpanded,
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
@@ -912,7 +915,6 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // [메뉴 1: 생활기록]
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -946,7 +948,6 @@ fun HomeScreen(
                             }
                         }
 
-                        // [메뉴 2: 식단기록]
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -982,7 +983,6 @@ fun HomeScreen(
                     }
                 }
 
-                // 2. 메인 토글 FAB (+ / X 회전 버튼)
                 FloatingActionButton(
                     onClick = { isFabExpanded = !isFabExpanded },
                     containerColor = PrimaryBlue,
@@ -1001,7 +1001,6 @@ fun HomeScreen(
         }
     }
 
-    // 워치 연결 모달
     if (showConnectModal) {
         Dialog(
             onDismissRequest = { showConnectModal = false },
@@ -1032,7 +1031,7 @@ fun HomeScreen(
             }
 
             ConnectWatchScreen(
-                code = "12345",
+                code = pairingCode,
                 onBackClick = { showConnectModal = false }
             )
         }
@@ -1094,23 +1093,45 @@ private fun TimelineSectionGroup(
     time: String,
     content: @Composable () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Text(
-            text = time,
-            style = TextStyle(
-                fontFamily = Pretendard,
-                fontSize = 12.sp,
-                color = LabelGray,
-                textAlign = TextAlign.Center
-            ),
-            modifier = Modifier.width(42.dp)
-        )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = time,
+                style = TextStyle(
+                    fontFamily = Pretendard,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color(0xFF6C6E72),
+                    textAlign = TextAlign.Right
+                ),
+                modifier = Modifier.width(45.dp)
+            )
 
-        Column(modifier = Modifier.weight(1f)) {
-            content()
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp,
+                color = TimelineDividerColor
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Spacer(modifier = Modifier.width(45.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                content()
+            }
         }
     }
 }
@@ -1118,120 +1139,182 @@ private fun TimelineSectionGroup(
 @Composable
 private fun TimelineCard(
     status: String,
-    duration: String,
-    iconRes: Int
+    statusColor: Color,
+    iconRes: Int,
+    timeRange: String,
+    duration: String
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFF3F4F6), RoundedCornerShape(12.dp))
-            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(10.dp),
+                spotColor = Color(0x08000000),
+                ambientColor = Color(0x08000000)
+            )
+            .background(Color.White, RoundedCornerShape(10.dp))
+            .border(1.dp, Color(0xFFF3F4F6), RoundedCornerShape(10.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = status,
+                        modifier = Modifier.size(22.dp)
+                    )
+
                     Text(
                         text = status,
                         style = TextStyle(
                             fontFamily = Pretendard,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 15.5.sp,
+                            color = statusColor
+                        )
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = duration,
+                        style = TextStyle(
+                            fontFamily = Pretendard,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = TitleBlackColor
+                            fontSize = 15.sp,
+                            color = Color(0xFF121212)
                         )
                     )
                     Text(
-                        text = "발생시각 | 00:00~00:00",
+                        text = "지속",
                         style = TextStyle(
                             fontFamily = Pretendard,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 11.sp,
-                            color = LabelGray
-                        )
+                            color = Color(0xFF6C6E72)
+                        ),
+                        modifier = Modifier.padding(bottom = 1.dp)
                     )
                 }
             }
 
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = duration,
-                    style = TextStyle(
-                        fontFamily = Pretendard,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = TitleBlackColor
-                    )
+            Text(
+                text = "발생시각 | $timeRange",
+                style = TextStyle(
+                    fontFamily = Pretendard,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 11.sp,
+                    color = Color(0xFF9E9E9E)
                 )
-                Spacer(modifier = Modifier.width(2.dp))
-                Text(
-                    text = "지속",
-                    style = TextStyle(
-                        fontFamily = Pretendard,
-                        fontSize = 12.sp,
-                        color = LabelGray
-                    )
-                )
-            }
+            )
         }
     }
 }
 
-@Preview(name = "1. 기기 연결 전", showBackground = true, showSystemUi = true)
-@Composable
-fun HomeScreenDisconnectedPreview() {
-    AtoCueMobileTheme {
-        HomeScreen(isDeviceConnected = false, detectionState = DetectionState.NOT_CONNECTED)
-    }
-}
+// ==========================================
+// Preview 모음
+// ==========================================
 
-@Preview(name = "2. 감지 시작 전", showBackground = true, showSystemUi = true)
+@Preview(name = "1. 워치 연결 전", group = "상태별", showBackground = true, showSystemUi = true)
 @Composable
-fun HomeScreenStartReadyPreview() {
-    AtoCueMobileTheme {
-        HomeScreen(isDeviceConnected = true, detectionState = DetectionState.READY)
-    }
-}
-
-@Preview(name = "3. 실시간 감지 중 - 안정", showBackground = true, showSystemUi = true)
-@Composable
-fun HomeScreenDetectingStablePreview() {
+fun PreviewHomeScreenNotConnected() {
     AtoCueMobileTheme {
         HomeScreen(
-            isDeviceConnected = true,
-            detectionState = DetectionState.DETECTING,
-            currentStatus = ScratchStatus.STABLE,
-            totalScratchSeconds = 0
+            isDeviceConnected = false,
+            detectionState = DetectionState.NOT_CONNECTED
         )
     }
 }
 
-@Preview(name = "3-1. 실시간 감지 중 - 매우위험", showBackground = true, showSystemUi = true)
+@Preview(name = "2. 감지 시작 전 (READY)", group = "상태별", showBackground = true, showSystemUi = true)
 @Composable
-fun HomeScreenDetectingVeryDangerPreview() {
+fun PreviewHomeScreenReady() {
     AtoCueMobileTheme {
         HomeScreen(
             isDeviceConnected = true,
-            detectionState = DetectionState.DETECTING,
-            currentStatus = ScratchStatus.VERY_DANGER,
-            totalScratchSeconds = 120
+            detectionState = DetectionState.READY
         )
     }
 }
 
-@Preview(name = "4. 일시중지", showBackground = true, showSystemUi = true)
+@Preview(name = "3-1. 감지 중 - 안정 (STABLE)", group = "감지 단계", showBackground = true, showSystemUi = true)
 @Composable
-fun HomeScreenPausedPreview() {
+fun PreviewHomeScreenDetectingStable() {
+    AtoCueMobileTheme {
+        HomeScreen(
+            isDeviceConnected = true,
+            detectionState = DetectionState.DETECTING,
+            currentStatus = ScratchStatus.STABLE
+        )
+    }
+}
+
+@Preview(name = "3-2. 감지 중 - 보통 (NORMAL)", group = "감지 단계", showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewHomeScreenDetectingNormal() {
+    AtoCueMobileTheme {
+        HomeScreen(
+            isDeviceConnected = true,
+            detectionState = DetectionState.DETECTING,
+            currentStatus = ScratchStatus.NORMAL
+        )
+    }
+}
+
+@Preview(name = "3-3. 감지 중 - 경고 (WARNING)", group = "감지 단계", showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewHomeScreenDetectingWarning() {
+    AtoCueMobileTheme {
+        HomeScreen(
+            isDeviceConnected = true,
+            detectionState = DetectionState.DETECTING,
+            currentStatus = ScratchStatus.WARNING
+        )
+    }
+}
+
+@Preview(name = "3-4. 감지 중 - 위험 (DANGER)", group = "감지 단계", showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewHomeScreenDetectingDanger() {
+    AtoCueMobileTheme {
+        HomeScreen(
+            isDeviceConnected = true,
+            detectionState = DetectionState.DETECTING,
+            currentStatus = ScratchStatus.DANGER
+        )
+    }
+}
+
+@Preview(name = "3-5. 감지 중 - 매우위험 (VERY_DANGER)", group = "감지 단계", showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewHomeScreenDetectingVeryDanger() {
+    AtoCueMobileTheme {
+        HomeScreen(
+            isDeviceConnected = true,
+            detectionState = DetectionState.DETECTING,
+            currentStatus = ScratchStatus.VERY_DANGER
+        )
+    }
+}
+
+@Preview(name = "4. 감지 일시중지 (PAUSED)", group = "상태별", showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewHomeScreenPaused() {
     AtoCueMobileTheme {
         HomeScreen(
             isDeviceConnected = true,
@@ -1240,9 +1323,9 @@ fun HomeScreenPausedPreview() {
     }
 }
 
-@Preview(name = "5. 배터리 부족", showBackground = true, showSystemUi = true)
+@Preview(name = "5. 배터리 부족 (BATTERY_LOW)", group = "상태별", showBackground = true, showSystemUi = true)
 @Composable
-fun HomeScreenBatteryLowPreview() {
+fun PreviewHomeScreenBatteryLow() {
     AtoCueMobileTheme {
         HomeScreen(
             isDeviceConnected = true,
