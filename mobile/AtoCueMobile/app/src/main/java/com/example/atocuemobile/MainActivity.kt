@@ -1,22 +1,20 @@
 package com.example.atocuemobile
 
-import android.content.Context
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.atocuemobile.ui.screen.report.DailyReportScreen
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.edit
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.atocuemobile.network.RetrofitClient
 import com.example.atocuemobile.ui.component.BottomNavTab
@@ -38,6 +36,7 @@ import com.example.atocuemobile.ui.screen.record.meal.MealRecordInputScreen
 import com.example.atocuemobile.ui.viewmodel.OnboardingViewModel
 import com.example.atocuemobile.viewmodel.HomeViewModel
 import com.example.atocuemobile.ui.screen.timeline.TimelineScreen
+import com.google.android.gms.location.LocationServices
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,31 +52,6 @@ class MainActivity : ComponentActivity() {
                     AppRoot()
                 }
             }
-        }
-    }
-}
-
-// 온보딩 완료 여부를 로컬에 기억해두는 헬퍼
-private object OnboardingPrefs {
-    private const val PREFS_NAME = "atocue_onboarding_prefs"
-
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-    fun getCompletedChildId(context: Context, userId: Long): Long? {
-        val value = prefs(context).getLong("child_id_$userId", -1L)
-        return if (value == -1L) null else value
-    }
-
-    fun setCompleted(context: Context, userId: Long, childId: Long) {
-        prefs(context).edit {
-            putLong("child_id_$userId", childId)
-        }
-    }
-
-    fun clear(context: Context, userId: Long) {
-        prefs(context).edit {
-            remove("child_id_$userId")
         }
     }
 }
@@ -103,7 +77,7 @@ private fun AppRoot() {
     var loggedInUserId by remember { mutableStateOf<Long?>(null) }
     var authToken by remember { mutableStateOf<String?>(null) }
 
-    var savedChildId by remember { mutableStateOf<Long?>(null) }
+    var savedChildId by remember { mutableStateOf<Long?>(1L) }
 
     val onboardingViewModel: OnboardingViewModel = viewModel()
     val registeredChildId = onboardingViewModel.registeredChildId
@@ -125,15 +99,13 @@ private fun AppRoot() {
 
     when (currentScreen) {
         AppScreen.LOGIN -> LoginScreen(
-            onLoginSuccess = { userId, token ->
-                Log.d("AtoCue_Auth", "====== [로그인 성공] userId: $userId, token: $token ======")
+            onLoginSuccess = { userId, token, isOnboarded ->
+                Log.d("AtoCue_Auth", "====== [로그인 성공] userId: $userId, token: $token, isOnboarded: $isOnboarded ======")
                 loggedInUserId = userId
                 authToken = token
                 RetrofitClient.accessToken = token
 
-                val existingChildId = OnboardingPrefs.getCompletedChildId(context, userId)
-                if (existingChildId != null) {
-                    savedChildId = existingChildId
+                if (isOnboarded) {
                     currentScreen = AppScreen.MAIN
                 } else {
                     currentScreen = AppScreen.PERMISSION
@@ -190,11 +162,6 @@ private fun AppRoot() {
                 onboardingViewModel.submitOnboarding(
                     jwtToken = token,
                     onSuccess = {
-                        val userId = loggedInUserId
-                        val childId = onboardingViewModel.registeredChildId
-                        if (userId != null && childId != null) {
-                            OnboardingPrefs.setCompleted(context, userId, childId)
-                        }
                         currentScreen = AppScreen.ONBOARDING_COMPLETE
                     },
                     onError = { errorMsg ->
@@ -308,19 +275,46 @@ private fun MainHomeScreenContainer(
     onNavigateToMealCapture: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val context = LocalContext.current
     val uiState by homeViewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(BottomNavTab.HOME) }
 
     LaunchedEffect(Unit) {
-        homeViewModel.fetchWeather(
-            lat = 37.5665,
-            lon = 126.9780
-        )
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFineLocation || hasCoarseLocation) {
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        homeViewModel.fetchWeather(
+                            lat = location.latitude,
+                            lon = location.longitude
+                        )
+                    } else {
+                        homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
+                    }
+                }.addOnFailureListener {
+                    homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
+                }
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+                homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
+            }
+        } else {
+            homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
+        }
+
         homeViewModel.loadToday()
     }
 
-    // 각 화면 컴포저블들이 자체적으로 하단바를 포함하고 있으므로,
-    // 여기서는 Scaffold 없이 선택된 탭에 맞춰 컴포저블만 갈아끼워 줍니다.
     when (selectedTab) {
         BottomNavTab.HOME -> {
             HomeScreen(
@@ -369,7 +363,6 @@ private fun MainHomeScreenContainer(
                     onNavigateToMealCapture()
                 },
                 onNavigateToLifeRecordInput = {},
-                // 만약 TimelineScreen에 탭 선택 콜백이 있다면 아래처럼 연결 (없으면 생략 가능)
             )
         }
 

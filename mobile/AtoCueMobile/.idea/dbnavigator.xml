@@ -68,21 +68,10 @@ CREATE TABLE IF NOT EXISTS watch_devices (
       <console name="Connection 1" type="STANDARD" schema="hackaton_db" session="Main" />
     </connection>
     <connection id="234da8a7-3e39-45cd-8381-bd8eca8c796f">
-      <console name="Connection 2" type="STANDARD" schema="hackaton_db" session="Main"><![CDATA[-- 1. 6번 유저의 아이 피부 상태 데이터 삭제
-DELETE FROM child_skin_conditions 
-WHERE child_id IN (SELECT id FROM children WHERE user_id = 6);
-
--- 2. 6번 유저의 환경(날씨) 데이터 삭제
-DELETE FROM environment_data 
-WHERE child_id IN (SELECT id FROM children WHERE user_id = 6);
-
--- 3. 6번 유저에게 중복으로 쌓인 26개의 아이 데이터 싹 삭제
-DELETE FROM children 
-WHERE user_id = 6;
-
-SELECT * FROM children WHERE user_id = 6;
+      <console name="Connection 2" type="STANDARD" schema="hackaton_db" session="Main"><![CDATA[ALTER TABLE environment_data DROP COLUMN date;
 
 COMMIT;]]></console>
+      <console name="Connection 2 1" type="STANDARD" schema="hackaton_db" session="Main"><![CDATA[DESCRIBE environment_data;]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">

@@ -35,7 +35,8 @@ import retrofit2.HttpException
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (userId: Long, token: String) -> Unit,
+    // 💡 3번째 인자로 isOnboarded (Boolean)를 추가하여 MainActivity와 규격을 맞춤
+    onLoginSuccess: (userId: Long, token: String, isOnboarded: Boolean) -> Unit,
     onNavigateToSignUp: () -> Unit
 ) {
     var idInput by remember { mutableStateOf(TextFieldValue("")) }
@@ -111,8 +112,12 @@ fun LoginScreen(
 
                             if (response.isSuccessful && response.body() != null) {
                                 val loginResponse = response.body()!!
-                                // LoginResponse DTO 내부 필드명에 맞춰서 꺼내기 (예: token, userId)
-                                onLoginSuccess(loginResponse.userId, loginResponse.token)
+                                // 💡 백엔드가 주는 userId, token 외에 isOnboarded 값도 함께 전달!
+                                onLoginSuccess(
+                                    loginResponse.userId,
+                                    loginResponse.token,
+                                    loginResponse.isOnboarded
+                                )
                             } else {
                                 idError = "로그인에 실패했습니다. (코드: ${response.code()})"
                             }
@@ -154,7 +159,7 @@ fun LoginScreen(
 fun LoginScreenPreview() {
     AtoCueMobileTheme {
         LoginScreen(
-            onLoginSuccess = { _, _ -> },
+            onLoginSuccess = { _, _, _ -> },
             onNavigateToSignUp = {}
         )
     }
