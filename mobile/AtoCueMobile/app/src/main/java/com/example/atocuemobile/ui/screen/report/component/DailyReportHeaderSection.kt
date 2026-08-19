@@ -23,8 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val AtoCueBlue = Color(0xFF3B82F6)
-
+val AtoCueBlue = Color(0xFF3B82F6)
 private val tightTextStyle = TextStyle(
     platformStyle = PlatformTextStyle(
         includeFontPadding = false
@@ -34,8 +33,9 @@ private val tightTextStyle = TextStyle(
 @Composable
 fun DailyReportHeaderSection(
     dateText: String = "0월 00일 (요일), 오늘",
+    comparisonText: String = "평소보다 긁음이 많았어요",
     summaryTitle: String = "유제품과 건조한 환경이 의심돼요",
-    subSummaryText: String = "어제보다 긁음 18%↑",
+    subSummaryText: String? = "유제품 섭취 후 증상이 악화된 것으로 보여요", // 임시값
     onPrevDateClick: () -> Unit = {},
     onNextDateClick: () -> Unit = {}
 ) {
@@ -86,7 +86,7 @@ fun DailyReportHeaderSection(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "평소보다 긁음이 많았어요",
+                text = comparisonText,
                 fontSize = 15.sp,
                 color = Color.DarkGray,
                 style = tightTextStyle
@@ -99,14 +99,16 @@ fun DailyReportHeaderSection(
                 color = Color.Black,
                 style = tightTextStyle
             )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = subSummaryText,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFFF5252),
-                style = tightTextStyle
-            )
+            if (!subSummaryText.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = subSummaryText,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFFFF5252),
+                    style = tightTextStyle
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(36.dp))
@@ -176,7 +178,7 @@ fun DailyReportHeaderSection(
                                     .background(Color(0xFFEBF3FF))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                                     .size(width =53.dp, height = 24.dp),
-                                    contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text("▼ -8%", fontSize = 14.sp, color = AtoCueBlue, fontWeight = FontWeight.Bold, style = tightTextStyle)
                             }
@@ -200,7 +202,7 @@ fun DailyReportHeaderSection(
                                     .background(Color(0xFFFFEBEE))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                                     .size(width =53.dp, height = 24.dp),
-                                    contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text("▲ 3단계", fontSize = 13.sp, color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, style = tightTextStyle)
                             }

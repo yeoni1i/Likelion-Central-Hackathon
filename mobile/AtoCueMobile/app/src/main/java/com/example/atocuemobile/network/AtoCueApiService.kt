@@ -1,28 +1,10 @@
 package com.example.atocuemobile.network
 
-import com.example.atocuemobile.network.dto.ChildRegistrationResponse
-import com.example.atocuemobile.network.dto.DailyScratchResponse
-import com.example.atocuemobile.network.dto.LoginRequest
-import com.example.atocuemobile.network.dto.LoginResponse
-import com.example.atocuemobile.network.dto.OnboardingRequest
-import com.example.atocuemobile.network.dto.PairDeviceRequest
-import com.example.atocuemobile.network.dto.PairDeviceResponse
-import com.example.atocuemobile.network.dto.PairingCodeResponse
-import com.example.atocuemobile.network.dto.ParentInfoRequest
-import com.example.atocuemobile.network.dto.ScratchTimelineResponse
-import com.example.atocuemobile.network.dto.SignUpRequest
-import com.example.atocuemobile.network.dto.WeatherResponse
-import com.example.atocuemobile.network.dto.DetectionStatusResponse
-import com.example.atocuemobile.network.dto.CurrentDetectionResponse
-import com.example.atocuemobile.network.dto.PairingStatusResponse
 import okhttp3.ResponseBody
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.POST
-import retrofit2.http.Query
-import retrofit2.http.Path
+import retrofit2.http.*
+import com.example.atocuemobile.network.dto.DailyScratchResponse
+import com.example.atocuemobile.network.dto.ScratchTimelineResponse
 
 interface AtoCueApiService {
 
@@ -102,10 +84,27 @@ interface AtoCueApiService {
         @Query("timezone") timezone: String = "Asia/Seoul"
     ): ScratchTimelineResponse
 
-    // 5. 날씨 API (인터셉터가 토큰을 자동 주입하므로 헤더 파라미터 제거)
+    // 5. 날씨 API
     @GET("api/weather")
     suspend fun getWeather(
         @Query("lat") lat: Double,
         @Query("lon") lon: Double
     ): WeatherResponse
 }
+
+// 💡 현재 브랜치에 없는 DTO 클래스들의 임시 더미(Dummy) 선언
+// 내 브랜치의 프로젝트 컴파일을 위한 용도이며, 추후 메인에 합칠 때 진짜 DTO 파일로 자동 대체됩니다.
+class SignUpRequest
+class LoginRequest
+class LoginResponse
+class ParentInfoRequest
+class OnboardingRequest
+class ChildRegistrationResponse
+class PairingCodeResponse
+class PairDeviceRequest
+class PairDeviceResponse
+class PairingStatusResponse
+class DetectionStatusResponse
+class CurrentDetectionResponse
+
+class WeatherResponse
