@@ -59,4 +59,5 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }
