@@ -143,20 +143,26 @@ class HomeViewModel(
     }
 
     fun loadToday() {
-        if (!_uiState.value.isDeviceConnected) return
+        loadDate(LocalDate.now())
+    }
+
+    fun loadDate(date: LocalDate) {
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
             try {
-                val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+                val selectedDate =
+                    date.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
                 val dailyReport = RetrofitClient.api.getDailyScratchReport(
                     userId = userId,
-                    date = today
+                    date = selectedDate
                 )
+
                 val timeline = RetrofitClient.api.getScratchTimeline(
                     userId = userId,
-                    date = today
+                    date = selectedDate
                 )
 
                 val currentStatus = ScratchStatus.fromIntensity(dailyReport.averageIntensity?.toString())
@@ -165,6 +171,9 @@ class HomeViewModel(
                 val items = timeline.events.map { event: ScratchTimelineItem ->
                     val zoned = Instant.parse(event.startTs.toString()).atZone(ZoneId.of("Asia/Seoul"))
                     val hour = zoned.hour
+                    val endZoned = zoned.plusSeconds(
+                        event.durationSec.toLong()
+                    )
                     val ampm = if (hour < 12) "AM" else "PM"
                     val hour12 = when {
                         hour == 0 -> 12
@@ -178,7 +187,12 @@ class HomeViewModel(
                         hourLabel = "${"%02d".format(hour12)}:00\n$ampm",
                         status = ScratchStatus.fromIntensity(event.intensity),
                         durationLabel = "${minutes}분",
-                        timeRangeLabel = "%02d:00~%02d:00".format(hour, hour)
+                        timeRangeLabel = "%02d:%02d~%02d:%02d".format(
+                            zoned.hour,
+                            zoned.minute,
+                            endZoned.hour,
+                            endZoned.minute
+                        )
                     )
                 }
 

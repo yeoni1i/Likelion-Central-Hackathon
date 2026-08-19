@@ -19,6 +19,7 @@ import com.example.atocuemobile.ui.screen.timeline.component.WeekCalendar
 import com.example.atocuemobile.ui.screen.timeline.life.LifeRecordTab
 import com.example.atocuemobile.ui.screen.timeline.meal.MealRecordTab
 import com.example.atocuemobile.ui.screen.timeline.scratch.ScratchDetectTab
+import com.example.atocuemobile.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import androidx.compose.foundation.layout.padding
@@ -30,6 +31,7 @@ private val tabTitles = listOf("긁음 감지", "식단기록", "생활기록")
 
 @Composable
 fun TimelineScreen(
+    homeViewModel: HomeViewModel,
     onAddRecordClick: () -> Unit,
     onNavigateToLifeRecordInput: () -> Unit
 ) {
@@ -96,9 +98,20 @@ fun TimelineScreen(
         }
 
         when (selectedTab) {
-            0 -> ScratchDetectTab(date = selectedDate)
-            1 -> MealRecordTab(date = selectedDate, onAddRecordClick = onAddRecordClick)
-            2 -> LifeRecordTab(date = selectedDate, onNavigateToLifeRecordInput = onNavigateToLifeRecordInput)
+            0 -> ScratchDetectTab(
+                date = selectedDate,
+                homeViewModel = homeViewModel
+            )
+
+            1 -> MealRecordTab(
+                date = selectedDate,
+                onAddRecordClick = onAddRecordClick
+            )
+
+            2 -> LifeRecordTab(
+                date = selectedDate,
+                onNavigateToLifeRecordInput = onNavigateToLifeRecordInput
+            )
         }
     }
 

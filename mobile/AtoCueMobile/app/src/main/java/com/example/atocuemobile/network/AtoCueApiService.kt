@@ -15,6 +15,10 @@ import com.example.atocuemobile.network.dto.WeatherResponse
 import com.example.atocuemobile.network.dto.DetectionStatusResponse
 import com.example.atocuemobile.network.dto.CurrentDetectionResponse
 import com.example.atocuemobile.network.dto.PairingStatusResponse
+import com.example.atocuemobile.network.dto.DailyLogResponse
+import okhttp3.RequestBody
+import retrofit2.http.Multipart
+import retrofit2.http.Part
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -23,6 +27,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Path
+
 
 interface AtoCueApiService {
 
@@ -108,4 +113,16 @@ interface AtoCueApiService {
         @Query("lat") lat: Double,
         @Query("lon") lon: Double
     ): WeatherResponse
+
+    //6.일상데이터
+    @Multipart
+    @POST("daily-logs")
+    suspend fun createDailyLog(
+        @Part("request") request: RequestBody
+    ): DailyLogResponse
+
+    @GET("daily-logs")
+    suspend fun getDailyLogs(
+        @Query("date") date: String
+    ): List<DailyLogResponse>
 }

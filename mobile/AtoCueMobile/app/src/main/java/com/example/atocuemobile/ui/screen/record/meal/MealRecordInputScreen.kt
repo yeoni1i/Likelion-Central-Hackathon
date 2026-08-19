@@ -29,6 +29,16 @@ import com.example.atocuemobile.ui.screen.record.component.RecordDatePickerDialo
 import com.example.atocuemobile.ui.screen.timeline.AtoCueBlue
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.example.atocuemobile.network.RetrofitClient
+import com.example.atocuemobile.network.dto.DailyLogCreateRequest
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+
 
 @Composable
 fun MealRecordInputScreen(
@@ -42,6 +52,13 @@ fun MealRecordInputScreen(
     var selectedMealTime by remember { mutableStateOf("식사시간") }
 
     var menuList by remember { mutableStateOf(listOf("", "")) }
+
+    var isSubmitting by remember {
+        mutableStateOf(false)
+    }
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val dateFormatter = DateTimeFormatter.ofPattern("M월 dd일 (E)")
 
@@ -95,20 +112,138 @@ fun MealRecordInputScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Button(
-                    onClick = onSubmitComplete,
+                    onClick = {
+                        if (!isSubmitting) {
+
+                            coroutineScope.launch {
+                                try {
+                                    isSubmitting = true
+
+                                    // 빈 메뉴 제거
+                                    val foods = menuList
+                                        .map { it.trim() }
+                                        .filter { it.isNotBlank() }
+
+                                    if (foods.isEmpty()) {
+                                        Toast.makeText(
+                                            context,
+                                            "먹은 음식을 하나 이상 입력해주세요.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                        return@launch
+                                    }
+
+                                    if (selectedMealTime == "식사시간") {
+                                        Toast.makeText(
+                                            context,
+                                            "식사시간을 선택해주세요.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                        return@launch
+                                    }
+
+                                    // 화면의 한글 값을 백엔드 mealType 값으로 변환
+                                    val mealType = when (selectedMealTime) {
+                                        "아침" -> "BREAKFAST"
+                                        "점심" -> "LUNCH"
+                                        "저녁" -> "DINNER"
+                                        "간식" -> "SNACK"
+                                        else -> null
+                                    }
+
+                                    val requestDto = DailyLogCreateRequest(
+                                        mealType = mealType,
+                                        foods = foods,
+
+                                        // 식단 기록에서는 생활기록 데이터 없음
+                                        showerCount = null,
+                                        moisturizerCount = null,
+                                        symptoms = emptyList(),
+                                        memo = null,
+
+                                        date = selectedDate.toString()
+                                    )
+
+                                    val json = Gson().toJson(requestDto)
+
+                                    Log.d(
+                                        "DAILY_LOG_TEST",
+                                        "식단 등록 request = $json"
+                                    )
+
+                                    val requestBody = json.toRequestBody(
+                                        "application/json".toMediaTypeOrNull()
+                                    )
+
+                                    val response =
+                                        RetrofitClient.api.createDailyLog(
+                                            request = requestBody
+                                        )
+
+                                    Log.d(
+                                        "DAILY_LOG_TEST",
+                                        "식단 등록 성공 id=${response.id}"
+                                    )
+
+                                    Toast.makeText(
+                                        context,
+                                        "식단이 등록되었습니다.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    onSubmitComplete()
+
+                                } catch (e: Exception) {
+
+                                    Log.e(
+                                        "DAILY_LOG_TEST",
+                                        "식단 등록 실패",
+                                        e
+                                    )
+
+                                    Toast.makeText(
+                                        context,
+                                        "식단 등록 실패: ${e.message}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                } finally {
+                                    isSubmitting = false
+                                }
+                            }
+                        }
+                    },
+
+                    enabled = !isSubmitting,
+
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                         .height(65.dp),
+
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AtoCueBlue)
-                ) {
-                    Text(
-                        text = "등록하기",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AtoCueBlue
                     )
+                ) {
+
+                    if (isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "등록하기",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         },

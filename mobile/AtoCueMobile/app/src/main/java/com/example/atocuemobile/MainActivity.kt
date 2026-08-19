@@ -9,7 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import com.example.atocuemobile.ui.screen.record.life.LifeRecordInputScreen
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -92,7 +92,9 @@ private enum class AppScreen {
     ONBOARDING_COMPLETE,
     MAIN,
     CONNECT_WATCH,
-    MEAL_CAPTURE
+    MEAL_CAPTURE,
+
+    LIFE_RECORD
 }
 
 @Composable
@@ -226,12 +228,19 @@ private fun AppRoot() {
                 MainHomeScreenContainer(
                     homeViewModel = vm,
                     parentName = parentName,
+
                     onNavigateToConnectWatch = {
                         currentScreen = AppScreen.CONNECT_WATCH
                     },
+
                     onNavigateToMealCapture = {
                         currentScreen = AppScreen.MEAL_CAPTURE
                     },
+
+                    onNavigateToLifeRecord = {
+                        currentScreen = AppScreen.LIFE_RECORD
+                    },
+
                     onLogout = {
                         loggedInUserId = null
                         authToken = null
@@ -296,6 +305,17 @@ private fun AppRoot() {
                 )
             }
         }
+
+        AppScreen.LIFE_RECORD -> {
+            LifeRecordInputScreen(
+                onBack = {
+                    currentScreen = AppScreen.MAIN
+                },
+                onSubmitComplete = {
+                    currentScreen = AppScreen.MAIN
+                }
+            )
+        }
     }
 }
 
@@ -305,6 +325,7 @@ private fun MainHomeScreenContainer(
     parentName: String,
     onNavigateToConnectWatch: () -> Unit,
     onNavigateToMealCapture: () -> Unit,
+    onNavigateToLifeRecord: () -> Unit,
     onLogout: () -> Unit
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
@@ -364,11 +385,13 @@ private fun MainHomeScreenContainer(
 
         BottomNavTab.TIMELINE -> {
             TimelineScreen(
+                homeViewModel = homeViewModel,
                 onAddRecordClick = {
                     onNavigateToMealCapture()
                 },
-                onNavigateToLifeRecordInput = {},
-                // 만약 TimelineScreen에 탭 선택 콜백이 있다면 아래처럼 연결 (없으면 생략 가능)
+                onNavigateToLifeRecordInput = {
+                    onNavigateToLifeRecord()
+                }
             )
         }
 

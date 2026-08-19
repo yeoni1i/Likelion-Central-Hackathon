@@ -19,7 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.atocuemobile.ui.screen.timeline.ChipBorder
+import android.util.Log
+import com.example.atocuemobile.network.RetrofitClient
+import com.example.atocuemobile.network.dto.DailyLogResponse
 import com.example.atocuemobile.ui.screen.timeline.meal.component.MealRecordCard
 import com.example.atocuemobile.ui.screen.timeline.model.MealRecord
 import com.example.atocuemobile.ui.screen.timeline.model.MealType
@@ -31,8 +33,61 @@ fun MealRecordTab(
     date: LocalDate,
     onAddRecordClick: () -> Unit
 ) {
-    val records = remember {
-        MealType.entries.map { type -> MealRecord(date = date, mealType = type, photoUrl = null) }
+
+    var dailyLogs by remember {
+        mutableStateOf<List<DailyLogResponse>>(emptyList())
+    }
+
+    var isLoading by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(date) {
+        try {
+            isLoading = true
+
+            dailyLogs = RetrofitClient.api.getDailyLogs(
+                date = date.toString()
+            )
+
+            Log.d(
+                "DAILY_LOG_TEST",
+                "식단 조회 성공 date=$date logs=$dailyLogs"
+            )
+
+        } catch (e: Exception) {
+
+            Log.e(
+                "DAILY_LOG_TEST",
+                "식단 조회 실패 date=$date",
+                e
+            )
+
+            dailyLogs = emptyList()
+
+        } finally {
+            isLoading = false
+        }
+    }
+
+
+    // 식단으로 등록된 daily_log만 추출
+    val mealLogs = dailyLogs.filter {
+        !it.mealType.isNullOrBlank()
+    }
+
+    val records = MealType.entries.map { type ->
+
+        val matchedLog = mealLogs.firstOrNull { log ->
+            log.mealType == type.name
+        }
+
+        MealRecord(
+            date = date,
+            mealType = type,
+            photoUrl = matchedLog?.imageUrl,
+            menuItems = matchedLog?.foods ?: emptyList()
+        )
     }
 
     LazyVerticalGrid(

@@ -33,7 +33,8 @@ fun MealRecordCard(
             .clickable { onClick() }
     ) {
         // 1. 등록된 사진이 없을 때 "아직 등록된 기록이 없습니다" 텍스트
-        if (record.photoUrl == null) {
+        if (record.menuItems.isEmpty()) {
+
             Text(
                 text = "아직 등록된\n기록이 없습니다",
                 fontSize = 13.sp,
@@ -44,8 +45,33 @@ fun MealRecordCard(
                     .align(Alignment.TopStart)
                     .padding(start = 16.dp, top = 19.dp)
             )
+
         } else {
-            // TODO: 사진이 있을 경우 (Coil의 AsyncImage 등을 활용하여 이미지 표시)
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 19.dp
+                    )
+            ) {
+
+                record.menuItems.forEach { food ->
+
+                    Text(
+                        text = food,
+                        fontSize = 13.sp,
+                        color = Color(0xFF202124),
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(4.dp)
+                    )
+                }
+            }
         }
 
         // 2. 우측 하단 MealType 뱃지 (아침식사, 점심식사, 저녁식사, 간식)
