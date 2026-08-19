@@ -1,5 +1,6 @@
 package com.example.atocuemobile.ui.screen.timeline.life
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,141 +21,403 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.atocuemobile.network.RetrofitClient
+import com.example.atocuemobile.network.dto.DailyLogResponse
 import com.example.atocuemobile.ui.screen.timeline.ChipBorder
 import com.example.atocuemobile.ui.screen.timeline.MainBackGroundColor
 import com.example.atocuemobile.ui.screen.timeline.life.component.ShowerMoisturizerSection
 import com.example.atocuemobile.ui.screen.timeline.life.component.SymptomSection
-import com.example.atocuemobile.ui.screen.timeline.model.LifeRecord
+import com.example.atocuemobile.ui.screen.timeline.model.ShowerCount
+import com.example.atocuemobile.ui.screen.timeline.model.SymptomType
 import java.time.LocalDate
+
 
 @Composable
 fun LifeRecordTab(
     date: LocalDate,
     onNavigateToLifeRecordInput: () -> Unit
 ) {
-    var record by remember { mutableStateOf(LifeRecord()) }
-    var hasRecord by remember { mutableStateOf(false) }
-    var isEditing by remember { mutableStateOf(false) }
 
-    // 🌟 기록이 없고, 수정(입력) 중도 아닐 때만 Empty 화면 표시
-    if (!hasRecord && !isEditing) {
-        EmptyLifeRecord(
-            onStartInputClick = {
-                isEditing = true // 🌟 버튼 누르면 바로 입력(편집) 모드로 전환!
-                onNavigateToLifeRecordInput()
-            }
+    // ================================
+    // 서버에서 받아온 해당 날짜 전체 DailyLog
+    // ================================
+    var dailyLogs by remember {
+        mutableStateOf<List<DailyLogResponse>>(
+            emptyList()
         )
+    }
+
+    var isLoading by remember {
+        mutableStateOf(false)
+    }
+
+
+    // ================================
+    // 선택된 날짜가 바뀔 때마다
+    // 서버에서 DailyLog 다시 조회
+    // ================================
+    LaunchedEffect(date) {
+
+        try {
+
+            isLoading = true
+
+            dailyLogs =
+                RetrofitClient.api.getDailyLogs(
+                    date = date.toString()
+                )
+
+            Log.d(
+                "DAILY_LOG_TEST",
+                "생활기록 조회 성공 date=$date logs=$dailyLogs"
+            )
+
+        } catch (e: Exception) {
+
+            Log.e(
+                "DAILY_LOG_TEST",
+                "생활기록 조회 실패 date=$date",
+                e
+            )
+
+            dailyLogs = emptyList()
+
+        } finally {
+
+            isLoading = false
+        }
+    }
+
+
+    // ================================
+    // 전체 DailyLog 중 생활기록 찾기
+    //
+    // 식단기록은 mealType / foods를 가지고 있고
+    // 생활기록은 아래 값들을 가지고 있음
+    // ================================
+    val lifeLog =
+        dailyLogs.firstOrNull { log ->
+
+            log.showerCount != null ||
+                    log.moisturizerCount != null ||
+                    log.symptoms.isNotEmpty() ||
+                    !log.memo.isNullOrBlank()
+        }
+
+
+    // ================================
+    // 로딩 화면
+    // ================================
+    if (isLoading) {
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Text(
+                text = "생활기록을 불러오는 중입니다.",
+                color = Color.Gray
+            )
+        }
+
         return
     }
 
-    // 🌟 입력(수정) 모드이거나 기록이 이미 있을 때 보여지는 화면
+
+    // ================================
+    // 생활기록이 없는 경우
+    // ================================
+    if (lifeLog == null) {
+
+        EmptyLifeRecord(
+            onStartInputClick =
+                onNavigateToLifeRecordInput
+        )
+
+        return
+    }
+
+
+    // =====================================================
+    // 백엔드 데이터 → 기존 UI Model 변환
+    // =====================================================
+
+    /*
+     * 백엔드
+     *
+     * showerCount = 1 / 2 / 3
+     *
+     * ↓
+     *
+     * 기존 UI
+     *
+     * ShowerCount.ONCE
+     * ShowerCount.TWICE
+     * ShowerCount.THREE_OR_MORE
+     */
+    val showerCountUi: ShowerCount =
+        when (lifeLog.showerCount) {
+
+            1 -> ShowerCount.ONCE
+
+            2 -> ShowerCount.TWICE
+
+            3 -> ShowerCount.THREE_OR_MORE
+
+            else -> ShowerCount.THREE_OR_MORE
+        }
+
+
+    /*
+     * 백엔드
+     *
+     * [
+     *   "심한 가려움증",
+     *   "건조증"
+     * ]
+     *
+     * ↓
+     *
+     * 기존 UI
+     *
+     * [
+     *   SymptomType.SEVERE_ITCH,
+     *   SymptomType.DRYNESS
+     * ]
+     */
+    val symptomTypes: List<SymptomType> =
+        SymptomType.entries.filter { symptomType ->
+
+            lifeLog.symptoms.any { serverSymptom ->
+
+                serverSymptom == symptomType.label
+            }
+        }
+
+
+    // ================================
+    // 실제 생활기록 화면
+    // ================================
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MainBackGroundColor)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(
+                rememberScrollState()
+            )
             .padding(20.dp)
     ) {
+
+
+        // ================================
+        // 수정하기
+        // ================================
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement =
+                Arrangement.End
         ) {
+
             Text(
-                text = if (isEditing) "완료" else "수정하기",
+                text = "수정하기",
                 fontSize = 14.sp,
                 color = Color.Gray,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable {
-                    if (isEditing) {
-                        hasRecord = true
-                        isEditing = false
-                    } else {
-                        isEditing = true
+                fontWeight =
+                    FontWeight.Medium,
+                modifier =
+                    Modifier.clickable {
+
                         onNavigateToLifeRecordInput()
                     }
-                }
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
 
+        Spacer(
+            modifier =
+                Modifier.height(8.dp)
+        )
+
+
+        // ================================
+        // 샤워 / 보습제
+        // ================================
         ShowerMoisturizerSection(
-            showerCount = record.showerCount,
-            moisturizerCount = record.moisturizerCount,
-            isEditMode = isEditing,
-            onShowerCountChange = { record = record.copy(showerCount = it) },
-            onMoisturizerCountChange = { record = record.copy(moisturizerCount = it) }
+
+            showerCount =
+                showerCountUi,
+
+            moisturizerCount =
+                lifeLog.moisturizerCount ?: 0,
+
+            // 조회 화면이므로 수정 불가능
+            isEditMode = false,
+
+            onShowerCountChange = {},
+
+            onMoisturizerCountChange = {}
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
 
+        Spacer(
+            modifier =
+                Modifier.height(24.dp)
+        )
+
+
+        // ================================
+        // 주요 증상
+        // ================================
         SymptomSection(
-            selectedSymptoms = record.symptoms,
-            isEditMode = isEditing,
-            onSymptomToggle = { symptom ->
-                val updated = if (symptom in record.symptoms) {
-                    record.symptoms - symptom
-                } else {
-                    record.symptoms + symptom
-                }
-                record = record.copy(symptoms = updated)
-            }
+
+            selectedSymptoms =
+                symptomTypes,
+
+            // 조회 화면
+            isEditMode = false,
+
+            onSymptomToggle = {}
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
 
-        if (!isEditing && record.note.isNotBlank()) {
+        // ================================
+        // 특이사항 기록
+        // ================================
+        if (!lifeLog.memo.isNullOrBlank()) {
+
+            Spacer(
+                modifier =
+                    Modifier.height(24.dp)
+            )
+
+
             Text(
                 text = "특이사항 기록",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight =
+                    FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(8.dp))
+
+
+            Spacer(
+                modifier =
+                    Modifier.height(8.dp)
+            )
+
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(
+                        RoundedCornerShape(
+                            12.dp
+                        )
+                    )
                     .background(Color.White)
-                    .border(1.dp, ChipBorder, RoundedCornerShape(12.dp))
+                    .border(
+                        width = 1.dp,
+                        color = ChipBorder,
+                        shape =
+                            RoundedCornerShape(
+                                12.dp
+                            )
+                    )
                     .padding(16.dp)
             ) {
+
                 Text(
-                    text = record.note,
+                    text = lifeLog.memo,
                     fontSize = 14.sp,
                     color = Color.Black,
                     lineHeight = 20.sp
                 )
             }
         }
+
+
+        Spacer(
+            modifier =
+                Modifier.height(30.dp)
+        )
     }
 }
+
 
 @Composable
 private fun EmptyLifeRecord(
     onStartInputClick: () -> Unit
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MainBackGroundColor)
             .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+
+        horizontalAlignment =
+            Alignment.CenterHorizontally,
+
+        verticalArrangement =
+            Arrangement.Center
     ) {
-        Text(text = "생활기록이 비어있습니다.", textAlign = TextAlign.Center)
-        Spacer(modifier = Modifier.height(8.dp))
+
         Text(
-            text = "아래 버튼을 통해\n생활 기록을 입력해주세요",
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text =
+                "생활기록이 비어있습니다.",
+
+            textAlign =
+                TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(24.dp))
+
+
+        Spacer(
+            modifier =
+                Modifier.height(8.dp)
+        )
+
+
+        Text(
+            text =
+                "아래 버튼을 통해\n생활 기록을 입력해주세요",
+
+            textAlign =
+                TextAlign.Center,
+
+            color =
+                MaterialTheme
+                    .colorScheme
+                    .onSurfaceVariant
+        )
+
+
+        Spacer(
+            modifier =
+                Modifier.height(24.dp)
+        )
+
+
         Button(
-            onClick = onStartInputClick,
-            shape = RoundedCornerShape(50),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSurface)
+            onClick =
+                onStartInputClick,
+
+            shape =
+                RoundedCornerShape(50),
+
+            colors =
+                ButtonDefaults
+                    .buttonColors(
+                        containerColor =
+                            MaterialTheme
+                                .colorScheme
+                                .onSurface
+                    )
         ) {
-            Text(text = "기록 입력하기")
+
+            Text(
+                text =
+                    "기록 입력하기"
+            )
         }
     }
 }

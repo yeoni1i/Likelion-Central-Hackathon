@@ -33,7 +33,10 @@ fun MealRecordCard(
             .clickable { onClick() }
     ) {
         // 1. 등록된 사진이 없을 때 "아직 등록된 기록이 없습니다" 텍스트
-        if (record.menuItems.isEmpty()) {
+        val hasRecord =
+            record.photoUrl != null || record.menuItems.isNotEmpty()
+
+        if (!hasRecord) {
 
             Text(
                 text = "아직 등록된\n기록이 없습니다",
@@ -43,7 +46,10 @@ fun MealRecordCard(
                 textAlign = TextAlign.Start,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = 16.dp, top = 19.dp)
+                    .padding(
+                        start = 16.dp,
+                        top = 19.dp
+                    )
             )
 
         } else {
@@ -54,23 +60,26 @@ fun MealRecordCard(
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
-                        top = 19.dp
+                        top = 16.dp
                     )
             ) {
 
-                record.menuItems.forEach { food ->
+                record.menuItems
+                    .take(4)
+                    .forEach { food ->
 
-                    Text(
-                        text = food,
-                        fontSize = 13.sp,
-                        color = Color(0xFF202124),
-                        fontWeight = FontWeight.Medium
-                    )
+                        Text(
+                            text = food,
+                            fontSize = 13.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1
+                        )
 
-                    Spacer(
-                        modifier = Modifier.height(4.dp)
-                    )
-                }
+                        Spacer(
+                            modifier = Modifier.height(4.dp)
+                        )
+                    }
             }
         }
 
