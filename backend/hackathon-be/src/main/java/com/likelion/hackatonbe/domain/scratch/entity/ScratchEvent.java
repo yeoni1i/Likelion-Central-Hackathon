@@ -116,4 +116,8 @@ public class ScratchEvent {
     public Instant getStartTs() {
         return startTs;
     }
+
+    public Long getDeviceId() { return deviceId; }
+
+    public Instant getEndTs() { return endTs; }
 }
