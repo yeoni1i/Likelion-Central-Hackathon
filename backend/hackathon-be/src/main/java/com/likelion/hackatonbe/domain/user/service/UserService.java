@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -38,8 +40,10 @@ public class UserService {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
+        boolean isOnboarded = childRepository.findByUserId(user.getId()).isPresent();
+
         String token = jwtTokenProvider.createToken(user.getId(), user.getUsername());
-        return new LoginResponse(token, user.getId());
+        return new LoginResponse(token, user.getId(), isOnboarded);
     }
 
     @Transactional
@@ -54,18 +58,31 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Child child = Child.builder()
-                .user(user)
-                .name(request.getChildName())
-                .birthDate(request.getBirthDate())
-                .height(request.getHeight())
-                .weight(request.getWeight())
-                .skinConditions(request.getSkinConditions())
-                .specialNote(request.getSpecialNote())
-                .build();
+        Optional<Child> optionalChild = childRepository.findByUserId(userId);
 
-        Child savedChild = childRepository.save(child);
+        if (optionalChild.isPresent()) {
+            Child child = optionalChild.get();
+            child.updateInfo(
+                    request.getChildName(),
+                    request.getBirthDate(),
+                    request.getHeight(),
+                    request.getWeight(),
+                    request.getSkinConditions(),
+                    request.getSpecialNote()
+            );
+            return child.getId();
+        } else {
+            Child child = Child.builder()
+                    .user(user)
+                    .name(request.getChildName())
+                    .birthDate(request.getBirthDate())
+                    .height(request.getHeight())
+                    .weight(request.getWeight())
+                    .skinConditions(request.getSkinConditions())
+                    .specialNote(request.getSpecialNote())
+                    .build();
 
-        return savedChild.getId();
+            return childRepository.save(child).getId();
+        }
     }
 }
