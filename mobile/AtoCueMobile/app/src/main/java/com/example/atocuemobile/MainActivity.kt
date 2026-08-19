@@ -1,26 +1,21 @@
 package com.example.atocuemobile
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.example.atocuemobile.ui.screen.record.meal.MealCaptureScreen
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.atocuemobile.network.RetrofitClient
 import com.example.atocuemobile.ui.component.BottomNavTab
@@ -37,6 +32,7 @@ import com.example.atocuemobile.ui.screen.SignUpScreen
 import com.example.atocuemobile.ui.screen.SkinConditionScreen
 import com.example.atocuemobile.ui.screen.SpecialNotesScreen
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
+import com.example.atocuemobile.ui.screen.record.meal.MealCaptureScreen
 import com.example.atocuemobile.ui.screen.record.meal.MealRecordInputScreen
 import com.example.atocuemobile.ui.viewmodel.OnboardingViewModel
 import com.example.atocuemobile.viewmodel.HomeViewModel
@@ -48,13 +44,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            // TimelineScreen.kt에 선언된 화면을 불러와 실행만 함
-            TimelineScreen(
-                onAddRecordClick = {
-                    // 식단 기록 추가 버튼 클릭 시 동작할 로직
-                },
-                onNavigateToLifeRecordInput = {
-                    // 생활 기록 입력 이동 버튼 클릭 시 동작할 로직
             AtoCueMobileTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -63,6 +52,31 @@ class MainActivity : ComponentActivity() {
                     AppRoot()
                 }
             }
+        }
+    }
+}
+
+// 온보딩 완료 여부를 로컬에 기억해두는 헬퍼
+private object OnboardingPrefs {
+    private const val PREFS_NAME = "atocue_onboarding_prefs"
+
+    private fun prefs(context: Context) =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    fun getCompletedChildId(context: Context, userId: Long): Long? {
+        val value = prefs(context).getLong("child_id_$userId", -1L)
+        return if (value == -1L) null else value
+    }
+
+    fun setCompleted(context: Context, userId: Long, childId: Long) {
+        prefs(context).edit {
+            putLong("child_id_$userId", childId)
+        }
+    }
+
+    fun clear(context: Context, userId: Long) {
+        prefs(context).edit {
+            remove("child_id_$userId")
         }
     }
 }
@@ -77,23 +91,10 @@ private enum class AppScreen {
     ONBOARDING_NOTES,
     ONBOARDING_COMPLETE,
     MAIN,
-    CONNECT_WATCH
+    CONNECT_WATCH,
+    MEAL_CAPTURE
 }
-                    var showNextScreen by remember { mutableStateOf(false) }
 
-                    if (!showNextScreen) {
-                        MealCaptureScreen(
-                            onCapturedComplete = {
-                                showNextScreen = true
-                            },
-                            onBack = {
-                                finish()
-                            }
-                        )
-                    } else {
-                        MealRecordInputScreen(
-                            onBack = { showNextScreen = false}
-                        ) { }
 @Composable
 private fun AppRoot() {
     val context = LocalContext.current
@@ -101,15 +102,19 @@ private fun AppRoot() {
     var loggedInUserId by remember { mutableStateOf<Long?>(null) }
     var authToken by remember { mutableStateOf<String?>(null) }
 
+    var savedChildId by remember { mutableStateOf<Long?>(null) }
+
     val onboardingViewModel: OnboardingViewModel = viewModel()
     val registeredChildId = onboardingViewModel.registeredChildId
 
+    val effectiveChildId = registeredChildId ?: savedChildId
+
     val homeViewModel: HomeViewModel? =
-        if (loggedInUserId != null && registeredChildId != null) {
-            remember(loggedInUserId, registeredChildId) {
+        if (loggedInUserId != null && effectiveChildId != null) {
+            remember(loggedInUserId, effectiveChildId) {
                 HomeViewModel(
                     userId = loggedInUserId!!,
-                    childId = registeredChildId,
+                    childId = effectiveChildId,
                     initialDeviceConnected = false
                 )
             }
@@ -124,14 +129,20 @@ private fun AppRoot() {
                 loggedInUserId = userId
                 authToken = token
                 RetrofitClient.accessToken = token
-                currentScreen = AppScreen.PERMISSION
+
+                val existingChildId = OnboardingPrefs.getCompletedChildId(context, userId)
+                if (existingChildId != null) {
+                    savedChildId = existingChildId
+                    currentScreen = AppScreen.MAIN
+                } else {
+                    currentScreen = AppScreen.PERMISSION
+                }
             },
             onNavigateToSignUp = {
                 currentScreen = AppScreen.SIGN_UP
             }
         )
 
-                    }
         AppScreen.SIGN_UP -> SignUpScreen(
             onSignUpSuccess = { currentScreen = AppScreen.LOGIN },
             onNavigateBack = { currentScreen = AppScreen.LOGIN }
@@ -178,6 +189,11 @@ private fun AppRoot() {
                 onboardingViewModel.submitOnboarding(
                     jwtToken = token,
                     onSuccess = {
+                        val userId = loggedInUserId
+                        val childId = onboardingViewModel.registeredChildId
+                        if (userId != null && childId != null) {
+                            OnboardingPrefs.setCompleted(context, userId, childId)
+                        }
                         currentScreen = AppScreen.ONBOARDING_COMPLETE
                     },
                     onError = { errorMsg ->
@@ -194,7 +210,6 @@ private fun AppRoot() {
         )
 
         AppScreen.MAIN -> {
-
             val vm = homeViewModel
 
             if (vm == null) {
@@ -206,9 +221,7 @@ private fun AppRoot() {
 
                 currentScreen = AppScreen.LOGIN
             } else {
-
-                val parentName =
-                    onboardingViewModel.parentName.ifBlank { "보호자" }
+                val parentName = onboardingViewModel.parentName.ifBlank { "보호자" }
 
                 MainHomeScreenContainer(
                     homeViewModel = vm,
@@ -216,9 +229,13 @@ private fun AppRoot() {
                     onNavigateToConnectWatch = {
                         currentScreen = AppScreen.CONNECT_WATCH
                     },
+                    onNavigateToMealCapture = {
+                        currentScreen = AppScreen.MEAL_CAPTURE
+                    },
                     onLogout = {
                         loggedInUserId = null
                         authToken = null
+                        savedChildId = null
                         RetrofitClient.accessToken = null
                         currentScreen = AppScreen.LOGIN
                     }
@@ -227,7 +244,6 @@ private fun AppRoot() {
         }
 
         AppScreen.CONNECT_WATCH -> {
-
             val vm = homeViewModel
 
             if (vm == null) {
@@ -236,10 +252,8 @@ private fun AppRoot() {
                     "워치 연결 정보를 불러올 수 없습니다.",
                     Toast.LENGTH_SHORT
                 ).show()
-
                 currentScreen = AppScreen.MAIN
             } else {
-
                 val uiState by vm.uiState.collectAsState()
 
                 LaunchedEffect(uiState.isDeviceConnected) {
@@ -251,10 +265,32 @@ private fun AppRoot() {
                 ConnectWatchScreen(
                     code = uiState.pairingCode,
                     isLoading = uiState.isLoading,
-                    onRefreshCode = {
-                        vm.fetchPairingCode()
+                    onRefreshCode = { vm.fetchPairingCode() },
+                    onBackClick = { currentScreen = AppScreen.MAIN },
+                    onSkipClick = {
+                        vm.skipPairingForTest()
+                        currentScreen = AppScreen.MAIN
+                    }
+                )
+            }
+        }
+
+        AppScreen.MEAL_CAPTURE -> {
+            var showNextScreen by remember { mutableStateOf(false) }
+
+            if (!showNextScreen) {
+                MealCaptureScreen(
+                    onCapturedComplete = {
+                        showNextScreen = true
                     },
-                    onBackClick = {
+                    onBack = {
+                        currentScreen = AppScreen.MAIN
+                    }
+                )
+            } else {
+                MealRecordInputScreen(
+                    onBack = { showNextScreen = false },
+                    onSubmitComplete = {
                         currentScreen = AppScreen.MAIN
                     }
                 )
@@ -268,9 +304,9 @@ private fun MainHomeScreenContainer(
     homeViewModel: HomeViewModel,
     parentName: String,
     onNavigateToConnectWatch: () -> Unit,
+    onNavigateToMealCapture: () -> Unit,
     onLogout: () -> Unit
 ) {
-
     val uiState by homeViewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(BottomNavTab.HOME) }
 
@@ -282,6 +318,8 @@ private fun MainHomeScreenContainer(
         homeViewModel.loadToday()
     }
 
+    // 각 화면 컴포저블들이 자체적으로 하단바를 포함하고 있으므로,
+    // 여기서는 Scaffold 없이 선택된 탭에 맞춰 컴포저블만 갈아끼워 줍니다.
     when (selectedTab) {
         BottomNavTab.HOME -> {
             HomeScreen(
@@ -298,7 +336,9 @@ private fun MainHomeScreenContainer(
                 weatherData = uiState.weatherData,
                 guideList = uiState.guideList,
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                },
                 onConnectWatchClick = {
                     homeViewModel.fetchPairingCode()
                     onNavigateToConnectWatch()
@@ -315,7 +355,20 @@ private fun MainHomeScreenContainer(
                 },
                 onStopDetectionClick = {
                     homeViewModel.onStopDetection()
+                },
+                onMealLogClick = {
+                    onNavigateToMealCapture()
                 }
+            )
+        }
+
+        BottomNavTab.TIMELINE -> {
+            TimelineScreen(
+                onAddRecordClick = {
+                    onNavigateToMealCapture()
+                },
+                onNavigateToLifeRecordInput = {},
+                // 만약 TimelineScreen에 탭 선택 콜백이 있다면 아래처럼 연결 (없으면 생략 가능)
             )
         }
 
@@ -324,26 +377,19 @@ private fun MainHomeScreenContainer(
                 guardianName = parentName,
                 pairingCode = uiState.pairingCode,
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                },
                 onDeviceManageClick = {
                     homeViewModel.fetchPairingCode()
                     onNavigateToConnectWatch()
                 },
                 onLogoutClick = onLogout
             )
-            )
         }
 
         else -> {
             HomeScreen(
-                isDeviceConnected = uiState.isDeviceConnected,
-                detectionState = if (uiState.isDeviceConnected) {
-                    if (uiState.isDetecting) DetectionState.DETECTING else DetectionState.READY
-                } else {
-                    DetectionState.NOT_CONNECTED
-                },
-                pairingCode = uiState.pairingCode,
-                weatherData = uiState.weatherData,
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it }
             )

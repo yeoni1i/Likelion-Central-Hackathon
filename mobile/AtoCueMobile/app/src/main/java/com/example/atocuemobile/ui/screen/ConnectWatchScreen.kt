@@ -31,7 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow // 💡 shadow 누락 해결
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -50,11 +50,12 @@ private val Pretendard = FontFamily.Default
 
 @Composable
 fun ConnectWatchScreen(
-    title: String = "워치연결",
+    title: String = "기기 연결",
     code: String = "------",
     isLoading: Boolean = false,
     onRefreshCode: () -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onSkipClick: () -> Unit = {} // 💡 워치 연결 건너뛰기 콜백 추가
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -94,15 +95,15 @@ fun ConnectWatchScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // 2. 중앙 안내 문구
+            // 2. 중앙 안내 문구 (두께 Normal로 조정됨)
             Text(
                 text = "아래의 코드를 아이의\n워치에 입력해주세요",
                 style = TextStyle(
                     fontFamily = Pretendard,
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Normal,
                     lineHeight = 33.sp,
                     color = Color(0xFF000000),
                     textAlign = TextAlign.Center
@@ -193,6 +194,37 @@ fun ConnectWatchScreen(
                             color = PrimaryBlueColor
                         )
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // 5. [개발용] 워치 연결 건너뛰기 버튼 (하단 고정 배치)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = onSkipClick),
+                    color = PrimaryBlueColor
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "⚡ [개발용] 워치 연결 건너뛰기",
+                            style = TextStyle(
+                                fontFamily = Pretendard,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        )
+                    }
                 }
             }
         }

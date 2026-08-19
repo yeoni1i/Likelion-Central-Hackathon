@@ -35,7 +35,7 @@ interface AtoCueApiService {
     @POST("accounts/")
     suspend fun login(
         @Body request: LoginRequest
-    ): LoginResponse
+    ): Response<LoginResponse>
 
     // 2. 온보딩
     @POST("accounts/parent_info")
@@ -50,7 +50,7 @@ interface AtoCueApiService {
         @Body request: OnboardingRequest
     ): Response<ChildRegistrationResponse>
 
-    // 3. 워치 페어링 (백엔드 DevicePairingController에 맞춰 childId를 쿼리로 전달)
+    // 3. 워치 페어링
     @POST("devices/pairing-codes")
     suspend fun createPairingCode(
         @Header("Authorization") token: String,
@@ -62,36 +62,30 @@ interface AtoCueApiService {
         @Body request: PairDeviceRequest
     ): PairDeviceResponse
 
-    // 모바일이 워치 페어링 완료 여부 확인
     @GET("devices/pairing-codes/{code}/status")
     suspend fun getPairingStatus(
         @Path("code") code: String
     ): PairingStatusResponse
 
-    // 워치 감지 시작
     @POST("devices/{deviceId}/detection/start")
     suspend fun startDetection(
         @Path("deviceId") deviceId: Long
     ): Response<Unit>
 
-    // 워치 감지 중지
     @POST("devices/{deviceId}/detection/stop")
     suspend fun stopDetection(
         @Path("deviceId") deviceId: Long
     ): Response<Unit>
 
-    // 워치가 START / STOP 상태 확인
     @GET("devices/{deviceId}/detection/status")
     suspend fun getDetectionStatus(
         @Path("deviceId") deviceId: Long
     ): DetectionStatusResponse
 
-    // 모바일이 현재 긁음 상태 확인
     @GET("devices/{deviceId}/detection/current")
     suspend fun getCurrentDetection(
         @Path("deviceId") deviceId: Long
     ): CurrentDetectionResponse
-
 
     // 4. 긁음 데이터 통계 & 이벤트
     @GET("scratch/reports/daily")
@@ -108,10 +102,9 @@ interface AtoCueApiService {
         @Query("timezone") timezone: String = "Asia/Seoul"
     ): ScratchTimelineResponse
 
-    // 5. 날씨 API
-    @GET("weather")
+    // 5. 날씨 API (인터셉터가 토큰을 자동 주입하므로 헤더 파라미터 제거)
+    @GET("api/weather")
     suspend fun getWeather(
-        @Header("Authorization") token: String,
         @Query("lat") lat: Double,
         @Query("lon") lon: Double
     ): WeatherResponse

@@ -93,7 +93,6 @@ fun MyPageScreen(
                     )
                 }
 
-                // 로고 아래 여백 축소 (35.dp -> 20.dp)
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // 2. 프로필 영역
@@ -119,7 +118,6 @@ fun MyPageScreen(
                         )
                     }
 
-                    // 프로필 이미지와 텍스트 사이 간격 줄이기 (offset x값을 -28 -> -20으로 조정하여 바짝 붙임)
                     Column(
                         modifier = Modifier.offset(x = (-20).dp),
                         horizontalAlignment = Alignment.Start,
@@ -136,7 +134,7 @@ fun MyPageScreen(
                             )
                         )
 
-                        Spacer(modifier = Modifier.height(2.dp)) // 라벨과 이름 사이 간격도 살짝 축소
+                        Spacer(modifier = Modifier.height(2.dp))
 
                         Text(
                             text = guardianName,
@@ -151,7 +149,6 @@ fun MyPageScreen(
                     }
                 }
 
-                // 프로필 영역 아래 여백 축소 (24.dp -> 16.dp)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 3. 하단 메뉴 영역 (흰색)
@@ -189,10 +186,10 @@ fun MyPageScreen(
             }
         }
 
-        // 기기 관리 모달 (6자리 페어링 코드 연동)
+        // 기기 관리 모달 (6자리 페어링 코드 연동) - 타이틀을 "기기 연결"로 수정
         if (showDeviceManagementModal) {
             ConnectWatchScreen(
-                title = "기기 관리",
+                title = "기기 연결",
                 code = pairingCode,
                 onBackClick = { showDeviceManagementModal = false }
             )

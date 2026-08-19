@@ -59,7 +59,19 @@ class HomeViewModel(
     )
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    // 1. 워치 6자리 페어링 코드 발급
+    fun skipPairingForTest() {
+        pairingPollingJob?.cancel()
+        _uiState.update {
+            it.copy(
+                isDeviceConnected = true,
+                isDetecting = false,
+                deviceId = 1L,
+                errorMessage = null
+            )
+        }
+        loadToday()
+    }
+
     fun fetchPairingCode() {
         if (_uiState.value.isLoading) return
 
@@ -88,7 +100,6 @@ class HomeViewModel(
         }
     }
 
-    // 2. 워치 연결 완료 처리
     fun onDeviceConnected() {
         _uiState.update { it.copy(isDeviceConnected = true, isDetecting = false) }
         loadToday()
@@ -131,7 +142,6 @@ class HomeViewModel(
         }
     }
 
-    // 3. 오늘 긁음 데이터 조회
     fun loadToday() {
         if (!_uiState.value.isDeviceConnected) return
 
@@ -189,15 +199,11 @@ class HomeViewModel(
         }
     }
 
-    // 4. 날씨 정보 조회 (토큰 헤더 유지)
+    // 4. 날씨 정보 조회 (인터셉터가 토큰을 자동 처리하므로 위도/경도만 전달)
     fun fetchWeather(lat: Double = 37.5665, lon: Double = 126.9780) {
         viewModelScope.launch {
             try {
-                val token = RetrofitClient.accessToken ?: ""
-                val formattedToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
-
                 val response = RetrofitClient.api.getWeather(
-                    token = formattedToken,
                     lat = lat,
                     lon = lon
                 )
@@ -329,15 +335,10 @@ class HomeViewModel(
             return
         }
 
-        println("DETECTION_MOBILE: START 요청 deviceId=$deviceId")
-
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.startDetection(deviceId)
-                println("DETECTION_MOBILE: START 응답 HTTP=${response.code()}")
-
                 if (response.isSuccessful) {
-                    println("DETECTION_MOBILE: START 성공 deviceId=$deviceId")
                     _uiState.update {
                         it.copy(
                             isDetecting = true,
@@ -347,13 +348,11 @@ class HomeViewModel(
                     }
                     startCurrentDetectionPolling()
                 } else {
-                    println("DETECTION_MOBILE: START 실패 body=" + response.errorBody()?.string())
                     _uiState.update {
                         it.copy(errorMessage = "감지 시작 실패 (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
-                println("DETECTION_MOBILE: START 예외=${e.message}")
                 e.printStackTrace()
                 _uiState.update {
                     it.copy(errorMessage = e.message ?: "감지 시작 요청에 실패했습니다.")
@@ -363,22 +362,13 @@ class HomeViewModel(
     }
 
     fun onStopDetection() {
-        val deviceId = _uiState.value.deviceId ?: run {
-            println("DETECTION_MOBILE: STOP 실패 - deviceId null")
-            return
-        }
-
-        println("DETECTION_MOBILE: STOP 요청 deviceId=$deviceId")
+        val deviceId = _uiState.value.deviceId ?: return
 
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.stopDetection(deviceId)
-                println("DETECTION_MOBILE: STOP 응답 HTTP=${response.code()}")
-
                 if (response.isSuccessful) {
-                    println("DETECTION_MOBILE: STOP 성공 deviceId=$deviceId")
                     detectionPollingJob?.cancel()
-
                     _uiState.update {
                         it.copy(
                             isDetecting = false,
@@ -388,14 +378,11 @@ class HomeViewModel(
                     }
                     loadToday()
                 } else {
-                    val errorBody = response.errorBody()?.string()
-                    println("DETECTION_MOBILE: STOP 실패 HTTP=${response.code()} body=$errorBody")
                     _uiState.update {
                         it.copy(errorMessage = "감지 종료 실패 (${response.code()})")
                     }
                 }
             } catch (e: Exception) {
-                println("DETECTION_MOBILE: STOP 예외=${e.message}")
                 e.printStackTrace()
                 _uiState.update {
                     it.copy(errorMessage = e.message ?: "감지 종료 요청 실패")

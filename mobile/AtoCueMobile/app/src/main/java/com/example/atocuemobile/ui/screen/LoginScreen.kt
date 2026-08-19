@@ -108,10 +108,17 @@ fun LoginScreen(
                             val response = RetrofitClient.api.login(
                                 LoginRequest(username = idInput.text, password = passwordInput.text)
                             )
-                            onLoginSuccess(response.userId, response.token)
+
+                            if (response.isSuccessful && response.body() != null) {
+                                val loginResponse = response.body()!!
+                                // LoginResponse DTO 내부 필드명에 맞춰서 꺼내기 (예: token, userId)
+                                onLoginSuccess(loginResponse.userId, loginResponse.token)
+                            } else {
+                                idError = "로그인에 실패했습니다. (코드: ${response.code()})"
+                            }
                         } catch (e: HttpException) {
                             when (e.code()) {
-                                404 -> idError = "존재하지않는 아이디입니다."
+                                404 -> idError = "존재하지 않는 아이디입니다."
                                 401 -> passwordError = "비밀번호가 일치하지 않습니다."
                                 else -> idError = "로그인에 실패했습니다. 다시 시도해주세요."
                             }

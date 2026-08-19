@@ -34,14 +34,18 @@ class OnboardingViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
 
     fun submitOnboarding(
-        jwtToken: String,
+        jwtToken: String = "",
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
+        // 💡 이미 요청 중이면 중복 실행 절대 불가 (DB Lock 방지 핵심)
+        if (isLoading) return
+
         isLoading = true
         viewModelScope.launch {
             try {
-                val tokenHeader = "Bearer $jwtToken"
+                val actualToken = jwtToken.ifBlank { RetrofitClient.accessToken ?: "" }
+                val tokenHeader = if (actualToken.startsWith("Bearer ")) actualToken else "Bearer $actualToken"
 
                 val request = OnboardingRequest(
                     parentName = parentName,
@@ -59,16 +63,13 @@ class OnboardingViewModel : ViewModel() {
                 )
 
                 if (response.isSuccessful) {
-
                     val body = response.body()
-
                     if (body != null) {
                         registeredChildId = body.childId
                         onSuccess()
                     } else {
                         onError("아이 등록 응답이 비어 있습니다.")
                     }
-
                 } else {
                     val errorBody = response.errorBody()?.string() ?: ""
                     onError("등록 실패 (${response.code()}): $errorBody")
@@ -76,6 +77,7 @@ class OnboardingViewModel : ViewModel() {
             } catch (e: Exception) {
                 onError("네트워크 오류: ${e.localizedMessage}")
             } finally {
+                // 💡 성공하든 실패하든 로딩 상태 해제 (단, 화면 전환이 성공하면 뷰모델이 유지되므로 상태 관리 유의)
                 isLoading = false
             }
         }
