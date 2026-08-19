@@ -2,7 +2,9 @@ package com.likelion.hackatonbe.domain.device.entity;
 
 import com.likelion.hackatonbe.domain.user.entity.Child;
 import jakarta.persistence.*;
-
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
@@ -37,6 +39,15 @@ public class WatchDevice {
 
     @Column(nullable = false)
     private LocalDateTime pairedAt;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "detection_status", nullable = false, length = 20)
+    private DetectionStatus detectionStatus = DetectionStatus.STOP;
+
+    @Column(name = "current_intensity")
+    private Integer currentIntensity;
+
+    @Column(name = "last_scratch_at")
+    private Instant lastScratchAt;
 
     protected WatchDevice() {
     }
@@ -61,6 +72,34 @@ public class WatchDevice {
         this.child = child;
         this.deviceName = deviceName;
         this.pairedAt = pairedAt;
+    }
+
+    public void startDetection() {
+        this.detectionStatus = DetectionStatus.START;
+        this.currentIntensity = null;
+        this.lastScratchAt = null;
+    }
+
+    public void stopDetection() {
+        this.detectionStatus = DetectionStatus.STOP;
+        this.currentIntensity = null;
+    }
+
+    public void updateScratchState(Integer intensity, Instant scratchAt) {
+        this.currentIntensity = intensity;
+        this.lastScratchAt = scratchAt;
+    }
+
+    public DetectionStatus getDetectionStatus() {
+        return detectionStatus;
+    }
+
+    public Integer getCurrentIntensity() {
+        return currentIntensity;
+    }
+
+    public Instant getLastScratchAt() {
+        return lastScratchAt;
     }
 
     public Long getId() {

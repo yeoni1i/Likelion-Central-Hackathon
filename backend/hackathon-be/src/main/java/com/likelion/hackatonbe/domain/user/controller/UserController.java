@@ -35,11 +35,18 @@ public class UserController {
     }
 
     @PostMapping("/signup_child")
-    public ResponseEntity<String> saveChildInfo(
+    public ResponseEntity<ChildRegistrationResponse> saveChildInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody OnboardingRequest request) {
-        userService.saveOnboardingInfo(userDetails.getUserId(), request);
-        return ResponseEntity.ok("아이 정보 등록 완료");
+
+        Long childId = userService.saveOnboardingInfo(
+                userDetails.getUserId(),
+                request
+        );
+
+        return ResponseEntity.ok(
+                new ChildRegistrationResponse(childId)
+        );
     }
 
     @GetMapping("/signup_end")

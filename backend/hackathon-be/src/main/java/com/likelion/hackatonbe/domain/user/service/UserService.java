@@ -50,7 +50,7 @@ public class UserService {
     }
 
     @Transactional
-    public void saveOnboardingInfo(Long userId, OnboardingRequest request) {
+    public Long saveOnboardingInfo(Long userId, OnboardingRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -64,6 +64,8 @@ public class UserService {
                 .specialNote(request.getSpecialNote())
                 .build();
 
-        childRepository.save(child);
+        Child savedChild = childRepository.save(child);
+
+        return savedChild.getId();
     }
 }

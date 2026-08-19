@@ -25,6 +25,9 @@ public class PairingCode {
     @Column(nullable = false)
     private PairingStatus status;
 
+    @Column(name = "device_id")
+    private Long deviceId;
+
     protected PairingCode() {
     }
 
@@ -51,8 +54,9 @@ public class PairingCode {
         this.status = PairingStatus.EXPIRED;
     }
 
-    public void use(LocalDateTime usedAt) {
+    public void use(Long deviceId) {
         this.status = PairingStatus.USED;
+        this.deviceId = deviceId;
     }
 
     public Long getId() {
@@ -74,4 +78,6 @@ public class PairingCode {
     public PairingStatus getStatus() {
         return status;
     }
+
+    public Long getDeviceId() { return deviceId; }
 }
