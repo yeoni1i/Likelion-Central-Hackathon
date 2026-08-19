@@ -10,6 +10,7 @@ import com.likelion.hackatonbe.domain.device.repository.WatchDeviceRepository;
 import com.likelion.hackatonbe.domain.user.entity.Child;
 import com.likelion.hackatonbe.domain.user.repository.ChildRepository;
 import org.springframework.stereotype.Service;
+import com.likelion.hackatonbe.domain.device.dto.PairingStatusResponse;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -27,6 +28,24 @@ public class DevicePairingService {
     private final ChildRepository childRepository;
 
     private final SecureRandom secureRandom = new SecureRandom();
+
+
+    @Transactional(readOnly = true)
+    public PairingStatusResponse getPairingStatus(String code) {
+
+        PairingCode pairingCode = pairingCodeRepository
+                .findByCode(code)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "유효하지 않은 등록 코드입니다."
+                        )
+                );
+
+        return new PairingStatusResponse(
+                pairingCode.isUsed(),
+                pairingCode.getDeviceId()
+        );
+    }
 
     public DevicePairingService(
             PairingCodeRepository pairingCodeRepository,
@@ -162,7 +181,7 @@ public class DevicePairingService {
         watchDeviceRepository.save(watchDevice);
 
         // 페어링 코드 사용 처리
-        pairingCode.use(now);
+        pairingCode.use(watchDevice.getId());
 
         return new PairDeviceResponse(
                 true,

@@ -12,8 +12,10 @@ import com.likelion.hackatonbe.domain.scratch.repository.IngestBatchRepository;
 import com.likelion.hackatonbe.domain.scratch.repository.ScratchEventRepository;
 import com.likelion.hackatonbe.global.error.BusinessException;
 import com.likelion.hackatonbe.global.error.ErrorCode;
+import com.likelion.hackatonbe.domain.device.service.DeviceDetectionService;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,19 +30,22 @@ public class ScratchIngestService {
     private final ScratchEventValidator validator;
     private final TimeProvider timeProvider;
     private final WatchDeviceRepository watchDeviceRepository;
+    private final DeviceDetectionService deviceDetectionService;
 
     public ScratchIngestService(
             ScratchEventRepository eventRepository,
             IngestBatchRepository batchRepository,
             ScratchEventValidator validator,
             TimeProvider timeProvider,
-            WatchDeviceRepository watchDeviceRepository
+            WatchDeviceRepository watchDeviceRepository,
+            DeviceDetectionService deviceDetectionService
     ) {
         this.eventRepository = eventRepository;
         this.batchRepository = batchRepository;
         this.validator = validator;
         this.timeProvider = timeProvider;
         this.watchDeviceRepository = watchDeviceRepository;
+        this.deviceDetectionService = deviceDetectionService;
     }
 
     @Transactional
@@ -183,6 +188,18 @@ public class ScratchIngestService {
         eventRepository.saveAll(
                 newEvents
         );
+
+        if (!newEvents.isEmpty()) {
+            ScratchEvent latestEvent = newEvents.stream()
+                    .max(Comparator.comparing(ScratchEvent::getEndTs))
+                    .orElseThrow();
+
+            deviceDetectionService.updateScratch(
+                    request.deviceId(),
+                    latestEvent.getIntensity(),
+                    now
+            );
+        }
 
         int accepted =
                 newEvents.size();
