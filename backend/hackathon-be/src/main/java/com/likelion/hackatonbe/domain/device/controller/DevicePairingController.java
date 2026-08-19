@@ -6,6 +6,8 @@ import com.likelion.hackatonbe.domain.device.dto.PairingCodeResponse;
 import com.likelion.hackatonbe.domain.device.service.DevicePairingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.likelion.hackatonbe.domain.device.dto.PairingStatusResponse;
+
 
 @RestController
 @RequestMapping("/devices")
@@ -21,10 +23,10 @@ public class DevicePairingController {
 
     @PostMapping("/pairing-codes")
     public ResponseEntity<PairingCodeResponse> createPairingCode(
-            @RequestParam Long parentUserId
+            @RequestParam Long childId
     ) {
         return ResponseEntity.ok(
-                devicePairingService.createPairingCode(parentUserId)
+                devicePairingService.createPairingCode(childId)
         );
     }
 
@@ -34,6 +36,15 @@ public class DevicePairingController {
     ) {
         return ResponseEntity.ok(
                 devicePairingService.pairDevice(request)
+        );
+    }
+
+    @GetMapping("/pairing-codes/{code}/status")
+    public ResponseEntity<PairingStatusResponse> getPairingStatus(
+            @PathVariable String code
+    ) {
+        return ResponseEntity.ok(
+                devicePairingService.getPairingStatus(code)
         );
     }
 }

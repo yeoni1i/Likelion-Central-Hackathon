@@ -1,7 +1,10 @@
 package com.likelion.hackatonbe.domain.device.entity;
 
+import com.likelion.hackatonbe.domain.user.entity.Child;
 import jakarta.persistence.*;
-
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,14 +29,25 @@ public class WatchDevice {
     @Column(nullable = false)
     private String deviceName;
 
-    @Column(nullable = false)
-    private Long parentUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "child_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_watch_device_child")
+    )
+    private Child child;
 
     @Column(nullable = false)
     private LocalDateTime pairedAt;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "detection_status", nullable = false, length = 20)
+    private DetectionStatus detectionStatus = DetectionStatus.STOP;
 
-    @Column(nullable = false)
-    private boolean active;
+    @Column(name = "current_intensity")
+    private Integer currentIntensity;
+
+    @Column(name = "last_scratch_at")
+    private Instant lastScratchAt;
 
     protected WatchDevice() {
     }
@@ -41,25 +55,51 @@ public class WatchDevice {
     public WatchDevice(
             String deviceIdentifier,
             String deviceName,
-            Long parentUserId,
+            Child child,
             LocalDateTime pairedAt
     ) {
         this.deviceIdentifier = deviceIdentifier;
         this.deviceName = deviceName;
-        this.parentUserId = parentUserId;
+        this.child = child;
         this.pairedAt = pairedAt;
-        this.active = true;
     }
 
     public void reconnect(
-            Long parentUserId,
+            Child child,
             String deviceName,
             LocalDateTime pairedAt
     ) {
-        this.parentUserId = parentUserId;
+        this.child = child;
         this.deviceName = deviceName;
         this.pairedAt = pairedAt;
-        this.active = true;
+    }
+
+    public void startDetection() {
+        this.detectionStatus = DetectionStatus.START;
+        this.currentIntensity = null;
+        this.lastScratchAt = null;
+    }
+
+    public void stopDetection() {
+        this.detectionStatus = DetectionStatus.STOP;
+        this.currentIntensity = null;
+    }
+
+    public void updateScratchState(Integer intensity, Instant scratchAt) {
+        this.currentIntensity = intensity;
+        this.lastScratchAt = scratchAt;
+    }
+
+    public DetectionStatus getDetectionStatus() {
+        return detectionStatus;
+    }
+
+    public Integer getCurrentIntensity() {
+        return currentIntensity;
+    }
+
+    public Instant getLastScratchAt() {
+        return lastScratchAt;
     }
 
     public Long getId() {
@@ -74,15 +114,11 @@ public class WatchDevice {
         return deviceName;
     }
 
-    public Long getParentUserId() {
-        return parentUserId;
+    public Child getChild() {
+        return child;
     }
 
     public LocalDateTime getPairedAt() {
         return pairedAt;
-    }
-
-    public boolean isActive() {
-        return active;
     }
 }

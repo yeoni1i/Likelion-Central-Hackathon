@@ -42,7 +42,6 @@ public class ScratchController {
 
     @PostMapping("/ingest/scratch-events")
     public ResponseEntity<ScratchIngestResponse> ingest(
-            @RequestHeader("X-User-Id") @Positive Long userId,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @RequestHeader(value = "X-Backfill", defaultValue = "false") boolean backfill,
             @Valid @RequestBody ScratchIngestRequest request
@@ -50,16 +49,31 @@ public class ScratchController {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new BusinessException(ErrorCode.IDEMPOTENCY_KEY_REQUIRED);
         }
-        return ResponseEntity.accepted().body(ingestService.ingest(userId, idempotencyKey, backfill, request));
+
+        return ResponseEntity.accepted()
+                .body(
+                        ingestService.ingest(
+                                idempotencyKey,
+                                backfill,
+                                request
+                        )
+                );
     }
 
     @GetMapping("/reports/daily")
     public DailyScratchResponse daily(
             @RequestHeader("X-User-Id") @Positive Long userId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(defaultValue = "Asia/Seoul") String timezone
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date,
+            @RequestParam(defaultValue = "Asia/Seoul")
+            String timezone
     ) {
-        return dailyScratchService.getDaily(userId, date, ZoneId.of(timezone));
+        return dailyScratchService.getDaily(
+                userId,
+                date,
+                ZoneId.of(timezone)
+        );
     }
 
     @GetMapping("/events")
@@ -83,6 +97,9 @@ public class ScratchController {
             @RequestHeader("X-User-Id") @Positive Long userId,
             @RequestParam @Positive Long deviceId
     ) {
-        return syncStatusService.get(userId, deviceId);
+        return syncStatusService.get(
+                userId,
+                deviceId
+        );
     }
 }
