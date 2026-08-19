@@ -7,7 +7,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -16,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.example.atocuemobile.ui.screen.record.meal.MealCaptureScreen
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +37,7 @@ import com.example.atocuemobile.ui.screen.SignUpScreen
 import com.example.atocuemobile.ui.screen.SkinConditionScreen
 import com.example.atocuemobile.ui.screen.SpecialNotesScreen
 import com.example.atocuemobile.ui.theme.AtoCueMobileTheme
+import com.example.atocuemobile.ui.screen.record.meal.MealRecordInputScreen
 import com.example.atocuemobile.ui.viewmodel.OnboardingViewModel
 import com.example.atocuemobile.viewmodel.HomeViewModel
 import com.example.atocuemobile.ui.screen.timeline.TimelineScreen
@@ -75,7 +79,21 @@ private enum class AppScreen {
     MAIN,
     CONNECT_WATCH
 }
+                    var showNextScreen by remember { mutableStateOf(false) }
 
+                    if (!showNextScreen) {
+                        MealCaptureScreen(
+                            onCapturedComplete = {
+                                showNextScreen = true
+                            },
+                            onBack = {
+                                finish()
+                            }
+                        )
+                    } else {
+                        MealRecordInputScreen(
+                            onBack = { showNextScreen = false}
+                        ) { }
 @Composable
 private fun AppRoot() {
     val context = LocalContext.current
@@ -113,6 +131,7 @@ private fun AppRoot() {
             }
         )
 
+                    }
         AppScreen.SIGN_UP -> SignUpScreen(
             onSignUpSuccess = { currentScreen = AppScreen.LOGIN },
             onNavigateBack = { currentScreen = AppScreen.LOGIN }

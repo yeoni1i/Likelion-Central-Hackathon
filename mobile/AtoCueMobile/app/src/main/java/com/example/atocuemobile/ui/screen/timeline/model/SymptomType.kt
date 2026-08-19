@@ -8,5 +8,4 @@ enum class SymptomType(val label: String, val iconRes: Int) {
     SCRATCH_WOUND("긁힌 상처", R.drawable.symptom_scratch_wound),
     OOZING_SCAB("진물과 딱지", R.drawable.symptom_oozing_scab),
     LICHENIFICATION("피부 태선화", R.drawable.symptom_lichenification),
-    DRYNESS("건조증", R.drawable.symptom_dryness)
-}
+    DRYNESS("건조증", R.drawable.symptom_dryness)}

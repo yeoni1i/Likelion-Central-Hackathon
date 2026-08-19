@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,15 +35,9 @@ fun ShowerMoisturizerSection(
         Column {
             Text(text = "샤워, 보습제", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
-            // 🌟 화이트 + 테두리 아웃라인
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
-                    .border(1.dp, ChipBorder, RoundedCornerShape(12.dp))
-                    .padding(vertical = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = "샤워", fontSize = 13.sp, color = Color.Gray)
@@ -65,13 +57,10 @@ fun ShowerMoisturizerSection(
 
     var expanded by remember { mutableStateOf(true) }
 
-    // 🌟 화이트 + 테두리 아웃라인
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .border(1.dp, ChipBorder, RoundedCornerShape(16.dp))
     ) {
         Row(
             modifier = Modifier
@@ -148,7 +137,6 @@ private fun ShowerCountButton(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoisturizerSlider(
     value: Int,
@@ -164,6 +152,7 @@ private fun MoisturizerSlider(
                 .fillMaxWidth()
                 .onSizeChanged { trackWidthPx = it.width }
         ) {
+            // 말풍선 (값 표시), 슬라이더 진행률에 맞춰 위치 이동
             val bubbleOffsetDp = with(density) { (trackWidthPx * fraction).toDp() }
             Box(
                 modifier = Modifier
@@ -182,34 +171,6 @@ private fun MoisturizerSlider(
             value = value.toFloat(),
             onValueChange = { onValueChange(it.toInt()) },
             valueRange = 1f..20f,
-            thumb = {
-                Box(
-                    modifier = Modifier
-                        .size(width = 44.dp, height = 28.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(Color.White)
-                        .border(1.dp, ChipBorder, RoundedCornerShape(50)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowLeft,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            },
             colors = SliderDefaults.colors(
                 activeTrackColor = AtoCueBlue,
                 inactiveTrackColor = SliderTrackGray
