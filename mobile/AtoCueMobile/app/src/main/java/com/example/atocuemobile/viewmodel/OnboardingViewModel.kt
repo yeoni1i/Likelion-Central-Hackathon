@@ -11,6 +11,10 @@ import com.example.atocuemobile.network.dto.OnboardingRequest
 import kotlinx.coroutines.launch
 
 class OnboardingViewModel : ViewModel() {
+
+    var registeredChildId by mutableStateOf<Long?>(null)
+        private set
+
     // 1. 보호자 정보
     var parentName by mutableStateOf("")
 
@@ -55,7 +59,16 @@ class OnboardingViewModel : ViewModel() {
                 )
 
                 if (response.isSuccessful) {
-                    onSuccess()
+
+                    val body = response.body()
+
+                    if (body != null) {
+                        registeredChildId = body.childId
+                        onSuccess()
+                    } else {
+                        onError("아이 등록 응답이 비어 있습니다.")
+                    }
+
                 } else {
                     val errorBody = response.errorBody()?.string() ?: ""
                     onError("등록 실패 (${response.code()}): $errorBody")
