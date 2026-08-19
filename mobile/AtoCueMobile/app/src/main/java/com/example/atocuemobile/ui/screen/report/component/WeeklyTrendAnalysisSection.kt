@@ -19,18 +19,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.atocuemobile.ui.screen.report.AtoCueBlue
+import com.example.atocuemobile.network.dto.WeeklyScratchResponse
+
+private val defaultWeeklyData = listOf(
+    "일" to 30, "월" to 55, "화" to 42,
+    "수" to 20, "목" to 85, "금" to 35, "토" to 48
+)
 
 @Composable
-fun WeeklyTrendAnalysisSection() {
-    val weeklyData = listOf(
-        "일" to 30, "월" to 55, "화" to 42,
-        "수" to 20, "목" to 85, "금" to 35, "토" to 48
-    )
-    val averageCount = 40
+fun WeeklyTrendAnalysisSection(
+    weekly: WeeklyScratchResponse? = null   // ✅ 추가: null이면 기존 더미값 사용
+) {
+    val weeklyData = remember(weekly) {
+        weekly?.dailyCounts?.map { it.dayLabel to it.eventCount } ?: defaultWeeklyData
+    }
+    val averageCount = remember(weekly) {
+        weekly?.averageCount?.toInt() ?: 40
+    }
 
-    val maxIndex = remember { weeklyData.indices.maxByOrNull { weeklyData[it].second } ?: 0 }
-    var selectedBarIndex by remember { mutableStateOf(maxIndex) }
+    val maxIndex = remember(weeklyData) { weeklyData.indices.maxByOrNull { weeklyData[it].second } ?: 0 }
+    var selectedBarIndex by remember(weeklyData) { mutableStateOf(maxIndex) }
 
     Column(
         modifier = Modifier
@@ -114,7 +122,7 @@ fun WeeklyTrendAnalysisSection() {
                     }
                 }
 
-                // 2. 💡 평균선 Canvas (막대 레이어보다 위로 올리기 위해 뒤에 작성)
+                // 2. 평균선 Canvas
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -129,7 +137,7 @@ fun WeeklyTrendAnalysisSection() {
                     )
                 }
 
-                // 3. 평균선 텍스트 (최상단)
+                // 3. 평균선 텍스트
                 Text(
                     text = "평균 ${averageCount}회",
                     color = Color(0xFFEE4444),
@@ -170,7 +178,7 @@ fun WeeklyTrendAnalysisSection() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 하단 요약 박스
+        // 하단 요약 박스 (텍스트는 아직 고정 — /analysis/daily 붙기 전까지 유지)
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)

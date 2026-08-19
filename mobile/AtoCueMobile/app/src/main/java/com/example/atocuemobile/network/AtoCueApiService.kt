@@ -3,6 +3,8 @@ package com.example.atocuemobile.network
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
+import com.example.atocuemobile.network.dto.DailyScratchResponse
+import com.example.atocuemobile.network.dto.ScratchTimelineResponse
 
 interface AtoCueApiService {
 
@@ -104,6 +106,5 @@ class PairDeviceResponse
 class PairingStatusResponse
 class DetectionStatusResponse
 class CurrentDetectionResponse
-class DailyScratchResponse
-class ScratchTimelineResponse
+
 class WeatherResponse
