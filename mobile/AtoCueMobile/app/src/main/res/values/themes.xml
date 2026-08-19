@@ -2,4 +2,11 @@
 <resources>
 
     <style name="Theme.AtoCueMobile" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.AtoCueMobile</item>
+    </style>
+
 </resources>

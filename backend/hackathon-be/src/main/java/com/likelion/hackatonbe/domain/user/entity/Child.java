@@ -49,4 +49,13 @@ public class Child {
         this.skinConditions = skinConditions != null ? skinConditions : new ArrayList<>();
         this.specialNote = specialNote;
     }
+
+    public void updateInfo(String name, LocalDate birthDate, Double height, Double weight, List<String> skinConditions, String specialNote) {
+        this.name = name;
+        this.birthDate = birthDate;
+        this.height = height;
+        this.weight = weight;
+        this.skinConditions = skinConditions != null ? skinConditions : new ArrayList<>();
+        this.specialNote = specialNote;
+    }
 }
