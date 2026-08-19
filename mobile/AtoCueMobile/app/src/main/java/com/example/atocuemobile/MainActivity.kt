@@ -77,6 +77,20 @@ private fun AppRoot() {
     var authToken by remember { mutableStateOf<String?>(null) }
 
     val onboardingViewModel: OnboardingViewModel = viewModel()
+    val registeredChildId = onboardingViewModel.registeredChildId
+
+    val homeViewModel: HomeViewModel? =
+        if (loggedInUserId != null && registeredChildId != null) {
+            remember(loggedInUserId, registeredChildId) {
+                HomeViewModel(
+                    userId = loggedInUserId!!,
+                    childId = registeredChildId,
+                    initialDeviceConnected = false
+                )
+            }
+        } else {
+            null
+        }
 
     when (currentScreen) {
         AppScreen.LOGIN -> LoginScreen(
@@ -154,71 +168,91 @@ private fun AppRoot() {
         )
 
         AppScreen.MAIN -> {
-            val currentUserId = loggedInUserId ?: 1L
-            val currentChildId = 1L
-            val parentName = onboardingViewModel.parentName.ifBlank { "보호자" }
 
-            MainHomeScreenContainer(
-                userId = currentUserId,
-                childId = currentChildId,
-                parentName = parentName,
-                onNavigateToConnectWatch = {
-                    currentScreen = AppScreen.CONNECT_WATCH
-                },
-                onLogout = {
-                    loggedInUserId = null
-                    authToken = null
-                    RetrofitClient.accessToken = null
-                    currentScreen = AppScreen.LOGIN
-                }
-            )
+            val vm = homeViewModel
+
+            if (vm == null) {
+                Toast.makeText(
+                    context,
+                    "사용자 또는 아이 정보가 없습니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                currentScreen = AppScreen.LOGIN
+            } else {
+
+                val parentName =
+                    onboardingViewModel.parentName.ifBlank { "보호자" }
+
+                MainHomeScreenContainer(
+                    homeViewModel = vm,
+                    parentName = parentName,
+                    onNavigateToConnectWatch = {
+                        currentScreen = AppScreen.CONNECT_WATCH
+                    },
+                    onLogout = {
+                        loggedInUserId = null
+                        authToken = null
+                        RetrofitClient.accessToken = null
+                        currentScreen = AppScreen.LOGIN
+                    }
+                )
+            }
         }
 
         AppScreen.CONNECT_WATCH -> {
-            val currentUserId = loggedInUserId ?: 1L
-            val currentChildId = 1L
 
-            val homeViewModel: HomeViewModel = remember(currentUserId, currentChildId) {
-                HomeViewModel(userId = currentUserId, childId = currentChildId, initialDeviceConnected = false)
-            }
-            val uiState by homeViewModel.uiState.collectAsState()
+            val vm = homeViewModel
 
-            LaunchedEffect(currentUserId, currentChildId) {
-                homeViewModel.fetchPairingCode()
-            }
+            if (vm == null) {
+                Toast.makeText(
+                    context,
+                    "워치 연결 정보를 불러올 수 없습니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
 
-            ConnectWatchScreen(
-                code = uiState.pairingCode,
-                isLoading = uiState.isLoading,
-                onRefreshCode = {
-                    homeViewModel.fetchPairingCode()
-                },
-                onBackClick = {
-                    currentScreen = AppScreen.MAIN
+                currentScreen = AppScreen.MAIN
+            } else {
+
+                val uiState by vm.uiState.collectAsState()
+
+                LaunchedEffect(uiState.isDeviceConnected) {
+                    if (uiState.isDeviceConnected) {
+                        currentScreen = AppScreen.MAIN
+                    }
                 }
-            )
+
+                ConnectWatchScreen(
+                    code = uiState.pairingCode,
+                    isLoading = uiState.isLoading,
+                    onRefreshCode = {
+                        vm.fetchPairingCode()
+                    },
+                    onBackClick = {
+                        currentScreen = AppScreen.MAIN
+                    }
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun MainHomeScreenContainer(
-    userId: Long,
-    childId: Long,
+    homeViewModel: HomeViewModel,
     parentName: String,
     onNavigateToConnectWatch: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val homeViewModel: HomeViewModel = remember(userId, childId) {
-        HomeViewModel(userId = userId, childId = childId, initialDeviceConnected = false)
-    }
 
     val uiState by homeViewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(BottomNavTab.HOME) }
 
-    LaunchedEffect(userId, childId) {
-        homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
-        homeViewModel.fetchPairingCode()
+    LaunchedEffect(Unit) {
+        homeViewModel.fetchWeather(
+            lat = 37.5665,
+            lon = 126.9780
+        )
         homeViewModel.loadToday()
     }
 
@@ -245,8 +279,10 @@ private fun MainHomeScreenContainer(
                 },
                 onRefreshClick = {
                     homeViewModel.loadToday()
-                    homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
-                    homeViewModel.fetchPairingCode()
+                    homeViewModel.fetchWeather(
+                        lat = 37.5665,
+                        lon = 126.9780
+                    )
                 },
                 onStartDetectionClick = {
                     homeViewModel.onStartDetection()

@@ -18,6 +18,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 data class TimelineUiItem(
     val hourLabel: String,
@@ -30,6 +32,7 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val isDeviceConnected: Boolean = false,
     val isDetecting: Boolean = false,
+    val deviceId: Long? = null,
     val pairingCode: String = "------",
     val currentStatus: ScratchStatus = ScratchStatus.STABLE,
     val totalScratchSecondsToday: Int = 0,
@@ -40,10 +43,13 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    private val userId: Long = 1L,       // 부모 유저 ID
-    private val childId: Long = 1L,      // 자식 ID
+    private val userId: Long,
+    private val childId: Long,
     initialDeviceConnected: Boolean = false
 ) : ViewModel() {
+
+    private var pairingPollingJob: Job? = null
+    private var detectionPollingJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         HomeUiState(
@@ -73,6 +79,8 @@ class HomeViewModel(
                         isLoading = false
                     )
                 }
+
+                startPairingStatusPolling()
             } catch (e: Exception) {
                 e.printStackTrace()
                 _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
@@ -84,6 +92,43 @@ class HomeViewModel(
     fun onDeviceConnected() {
         _uiState.update { it.copy(isDeviceConnected = true, isDetecting = false) }
         loadToday()
+    }
+
+    fun startPairingStatusPolling() {
+        pairingPollingJob?.cancel()
+
+        pairingPollingJob = viewModelScope.launch {
+            while (true) {
+                val code = _uiState.value.pairingCode
+
+                if (code == "------") {
+                    delay(2000)
+                    continue
+                }
+
+                try {
+                    val response = RetrofitClient.api.getPairingStatus(code)
+
+                    if (response.paired && response.deviceId != null) {
+                        _uiState.update {
+                            it.copy(
+                                isDeviceConnected = true,
+                                isDetecting = false,
+                                deviceId = response.deviceId,
+                                errorMessage = null
+                            )
+                        }
+
+                        loadToday()
+                        break
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                delay(2000)
+            }
+        }
     }
 
     // 3. 오늘 긁음 데이터 조회
@@ -144,7 +189,7 @@ class HomeViewModel(
         }
     }
 
-    // 4. 날씨 정보 조회 (토큰 헤더 추가 완료)
+    // 4. 날씨 정보 조회 (토큰 헤더 유지)
     fun fetchWeather(lat: Double = 37.5665, lon: Double = 126.9780) {
         viewModelScope.launch {
             try {
@@ -245,12 +290,117 @@ class HomeViewModel(
         return guides
     }
 
+    private fun startCurrentDetectionPolling() {
+        detectionPollingJob?.cancel()
+
+        detectionPollingJob = viewModelScope.launch {
+            while (_uiState.value.isDetecting) {
+                val deviceId = _uiState.value.deviceId ?: break
+
+                try {
+                    val response = RetrofitClient.api.getCurrentDetection(deviceId)
+
+                    val scratchStatus = when (response.scratchStatus) {
+                        "NORMAL" -> ScratchStatus.NORMAL
+                        "WARNING" -> ScratchStatus.WARNING
+                        "DANGER" -> ScratchStatus.DANGER
+                        "VERY_DANGER" -> ScratchStatus.VERY_DANGER
+                        else -> ScratchStatus.STABLE
+                    }
+
+                    _uiState.update {
+                        it.copy(currentStatus = scratchStatus)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                delay(2000)
+            }
+        }
+    }
+
     fun onStartDetection() {
-        _uiState.update { it.copy(isDetecting = true) }
-        loadToday()
+        val deviceId = _uiState.value.deviceId ?: run {
+            println("DETECTION_MOBILE: deviceId=NULL")
+            _uiState.update {
+                it.copy(errorMessage = "연결된 워치가 없습니다.")
+            }
+            return
+        }
+
+        println("DETECTION_MOBILE: START 요청 deviceId=$deviceId")
+
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.startDetection(deviceId)
+                println("DETECTION_MOBILE: START 응답 HTTP=${response.code()}")
+
+                if (response.isSuccessful) {
+                    println("DETECTION_MOBILE: START 성공 deviceId=$deviceId")
+                    _uiState.update {
+                        it.copy(
+                            isDetecting = true,
+                            currentStatus = ScratchStatus.STABLE,
+                            errorMessage = null
+                        )
+                    }
+                    startCurrentDetectionPolling()
+                } else {
+                    println("DETECTION_MOBILE: START 실패 body=" + response.errorBody()?.string())
+                    _uiState.update {
+                        it.copy(errorMessage = "감지 시작 실패 (${response.code()})")
+                    }
+                }
+            } catch (e: Exception) {
+                println("DETECTION_MOBILE: START 예외=${e.message}")
+                e.printStackTrace()
+                _uiState.update {
+                    it.copy(errorMessage = e.message ?: "감지 시작 요청에 실패했습니다.")
+                }
+            }
+        }
     }
 
     fun onStopDetection() {
-        _uiState.update { it.copy(isDetecting = false) }
+        val deviceId = _uiState.value.deviceId ?: run {
+            println("DETECTION_MOBILE: STOP 실패 - deviceId null")
+            return
+        }
+
+        println("DETECTION_MOBILE: STOP 요청 deviceId=$deviceId")
+
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.stopDetection(deviceId)
+                println("DETECTION_MOBILE: STOP 응답 HTTP=${response.code()}")
+
+                if (response.isSuccessful) {
+                    println("DETECTION_MOBILE: STOP 성공 deviceId=$deviceId")
+                    detectionPollingJob?.cancel()
+
+                    _uiState.update {
+                        it.copy(
+                            isDetecting = false,
+                            currentStatus = ScratchStatus.STABLE,
+                            errorMessage = null
+                        )
+                    }
+                    loadToday()
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    println("DETECTION_MOBILE: STOP 실패 HTTP=${response.code()} body=$errorBody")
+                    _uiState.update {
+                        it.copy(errorMessage = "감지 종료 실패 (${response.code()})")
+                    }
+                }
+            } catch (e: Exception) {
+                println("DETECTION_MOBILE: STOP 예외=${e.message}")
+                e.printStackTrace()
+                _uiState.update {
+                    it.copy(errorMessage = e.message ?: "감지 종료 요청 실패")
+                }
+            }
+        }
     }
 }
