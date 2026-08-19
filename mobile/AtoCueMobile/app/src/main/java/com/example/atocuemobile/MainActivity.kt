@@ -39,6 +39,7 @@ import com.example.atocuemobile.ui.viewmodel.OnboardingViewModel
 import com.example.atocuemobile.viewmodel.HomeViewModel
 import com.example.atocuemobile.ui.screen.timeline.TimelineScreen
 import com.google.android.gms.location.LocationServices
+import com.example.atocuemobile.ui.screen.report.DailyReportScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -342,17 +343,21 @@ private fun MainHomeScreenContainer(
     when (selectedTab) {
 
         BottomNavTab.HOME -> {
+
             HomeScreen(
                 isDeviceConnected = uiState.isDeviceConnected,
-                detectionState = if (uiState.isDeviceConnected) {
-                    if (uiState.isDetecting) {
-                        DetectionState.DETECTING
+
+                detectionState =
+                    if (uiState.isDeviceConnected) {
+                        if (uiState.isDetecting) {
+                            DetectionState.DETECTING
+                        } else {
+                            DetectionState.READY
+                        }
                     } else {
-                        DetectionState.READY
-                    }
-                } else {
-                    DetectionState.NOT_CONNECTED
-                },
+                        DetectionState.NOT_CONNECTED
+                    },
+
                 pairingCode = uiState.pairingCode,
                 currentStatus = uiState.currentStatus,
                 totalScratchSeconds = uiState.totalScratchSecondsToday,
@@ -389,11 +394,17 @@ private fun MainHomeScreenContainer(
 
                 onMealLogClick = {
                     onNavigateToMealCapture()
+                },
+
+                onLifeLogClick = {
+                    onNavigateToLifeRecord()
                 }
             )
         }
 
+
         BottomNavTab.TIMELINE -> {
+
             TimelineScreen(
                 homeViewModel = homeViewModel,
 
@@ -407,7 +418,15 @@ private fun MainHomeScreenContainer(
             )
         }
 
+
+        BottomNavTab.REPORT -> {
+
+            DailyReportScreen()
+        }
+
+
         BottomNavTab.MY -> {
+
             MyPageScreen(
                 guardianName = parentName,
                 pairingCode = uiState.pairingCode,
@@ -423,15 +442,6 @@ private fun MainHomeScreenContainer(
                 },
 
                 onLogoutClick = onLogout
-            )
-        }
-
-        else -> {
-            HomeScreen(
-                selectedTab = selectedTab,
-                onTabSelected = {
-                    selectedTab = it
-                }
             )
         }
     }
