@@ -21,12 +21,8 @@ import retrofit2.http.Multipart
 import retrofit2.http.Part
 import okhttp3.ResponseBody
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.POST
-import retrofit2.http.Query
-import retrofit2.http.Path
+import retrofit2.http.*
+
 
 
 interface AtoCueApiService {
@@ -107,12 +103,13 @@ interface AtoCueApiService {
         @Query("timezone") timezone: String = "Asia/Seoul"
     ): ScratchTimelineResponse
 
-    // 5. 날씨 API (인터셉터가 토큰을 자동 주입하므로 헤더 파라미터 제거)
+    // 5. 날씨 API
     @GET("api/weather")
     suspend fun getWeather(
         @Query("lat") lat: Double,
         @Query("lon") lon: Double
     ): WeatherResponse
+
 
     //6.일상데이터
     @Multipart

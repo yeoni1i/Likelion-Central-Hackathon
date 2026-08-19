@@ -16,10 +16,7 @@ object RetrofitClient {
     private val authInterceptor = Interceptor { chain ->
 
         val originalRequest = chain.request()
-
-        // 기존 url().encodedPath() → property 문법
         val urlPath = originalRequest.url.encodedPath
-
         val builder = originalRequest.newBuilder()
 
         val isPublicApi =
@@ -117,9 +114,17 @@ object RetrofitClient {
             )
             .build()
 
+    // 기존 API 인터페이스
     val api: AtoCueApiService by lazy {
         retrofit.create(
             AtoCueApiService::class.java
+        )
+    }
+
+    // 일상/식단 기록 연동용 API 인터페이스
+    val apiService: ApiService by lazy {
+        retrofit.create(
+            ApiService::class.java
         )
     }
 }
