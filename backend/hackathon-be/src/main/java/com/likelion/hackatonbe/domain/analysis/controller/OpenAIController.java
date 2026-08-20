@@ -1,5 +1,6 @@
 package com.likelion.hackatonbe.domain.analysis.controller;
 
+import com.likelion.hackatonbe.domain.analysis.dto.DailyReportResponse;
 import com.likelion.hackatonbe.domain.analysis.service.AnalysisService;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +13,9 @@ public class OpenAIController {
 
     private final AnalysisService analysisService;
 
-    public OpenAIController(AnalysisService analysisService) {
+    public OpenAIController(
+            AnalysisService analysisService
+    ) {
         this.analysisService = analysisService;
     }
 
@@ -22,7 +25,7 @@ public class OpenAIController {
     }
 
     @GetMapping("/daily")
-    public String analyzeDaily(
+    public DailyReportResponse analyzeDaily(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam LocalDate date
     ) {

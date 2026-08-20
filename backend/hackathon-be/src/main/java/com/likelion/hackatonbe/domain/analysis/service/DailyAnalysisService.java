@@ -14,6 +14,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+
+//주간 긁음 데이터 생성-시간대별 막대 그래프
 @Service
 public class DailyAnalysisService {
 
