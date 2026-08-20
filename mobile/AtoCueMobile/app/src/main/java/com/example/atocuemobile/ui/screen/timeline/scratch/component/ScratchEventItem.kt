@@ -81,7 +81,7 @@ fun ScratchEventItem(event: ScratchEvent) {
                 verticalAlignment = Alignment.Bottom // 글자의 아래 기준선 맞춤
             ) {
                 Text(
-                    text = "${event.durationMinutes}분",
+                    text = "${event.durationSeconds}분",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black

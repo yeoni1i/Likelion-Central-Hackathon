@@ -55,8 +55,8 @@ fun ScratchDetectTab(
                 )
             }.getOrNull() ?: return@mapNotNull null
 
-            val durationMinutes = item.durationLabel
-                .replace("분", "")
+            val durationSeconds = item.durationLabel
+                .replace("초", "")
                 .trim()
                 .toIntOrNull()
                 ?: 0
@@ -72,7 +72,7 @@ fun ScratchDetectTab(
             ScratchEvent(
                 startTime = startTime,
                 endTime = endTime,
-                durationMinutes = durationMinutes,
+                durationSeconds = durationSeconds,
                 level = level
             )
         }
