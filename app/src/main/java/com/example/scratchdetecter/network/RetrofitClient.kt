@@ -31,5 +31,9 @@ object RetrofitClient {
         .build()
 
     val scratchApi: ScratchApi = retrofit.create(ScratchApi::class.java)
+
     val devicePairingApi: DevicePairingApi = retrofit.create(DevicePairingApi::class.java)
+
+    val deviceDetectionApi: DeviceDetectionApi =
+        retrofit.create(DeviceDetectionApi::class.java)
 }

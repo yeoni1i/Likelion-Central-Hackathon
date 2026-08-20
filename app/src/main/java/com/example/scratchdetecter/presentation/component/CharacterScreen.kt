@@ -27,20 +27,33 @@ fun CharacterScreen(
     onButtonClick: () -> Unit,
     @DrawableRes imageResId: Int,
     modifier: Modifier = Modifier,
-    imageSizeDp: Int = 107,
+
+    // 워치 원형 화면 기준 크기 조정
+    imageSizeDp: Int = 92,
     bubbleWidthDp: Int = 54,
     bubbleHeightDp: Int = 28,
     messageFontSizeSp: Int = 12,
-    characterOffsetYDp: Int = 15,
+
     buttonWidthDp: Int = 102,
     buttonHeightDp: Int = 40,
-    buttonOffsetYDp: Int = -20,
+
     buttonContainerColor: Color = Color.White,
     buttonContentColor: Color = Color.Black
 ) {
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
+
+        /*
+         * 기존 TopCenter 배치를 제거.
+         *
+         * 원형 워치에서는 위쪽 가용 폭이 좁기 때문에
+         * 캐릭터를 TopCenter에 바로 붙이면
+         * 말풍선/이미지가 잘릴 수 있음.
+         *
+         * 화면 중앙에서 약간 위로 올리는 방식으로 변경.
+         */
         MascotCharacter(
             message = message,
             imageSizeDp = imageSizeDp,
@@ -49,23 +62,30 @@ fun CharacterScreen(
             messageFontSizeSp = messageFontSizeSp,
             imageResId = imageResId,
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = characterOffsetYDp.dp)
+                .align(Alignment.Center)
+                .offset(y = (-28).dp)
         )
 
+        /*
+         * 버튼은 하단 원형 가장자리에 너무 붙지 않도록
+         * 24dp 위로 이동.
+         */
         Button(
             onClick = onButtonClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .offset(y = buttonOffsetYDp.dp)
+                .offset(y = (-24).dp)
                 .width(buttonWidthDp.dp)
                 .height(buttonHeightDp.dp),
-            shape = RoundedCornerShape(buttonHeightDp.dp / 2),
+            shape = RoundedCornerShape(
+                buttonHeightDp.dp / 2
+            ),
             colors = ButtonDefaults.buttonColors(
                 containerColor = buttonContainerColor,
                 contentColor = buttonContentColor
             )
         ) {
+
             Text(
                 text = buttonText,
                 modifier = Modifier.fillMaxWidth(),

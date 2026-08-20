@@ -2,11 +2,9 @@ package com.example.scratchdetecter.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -25,48 +23,39 @@ import androidx.wear.compose.material3.Text
 fun PairingIntroScreen(
     onPairClick: () -> Unit
 ) {
-    Column(
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF181818))
-            .padding(
-                start = 30.dp,
-                end = 30.dp,
-                top = 36.dp,
-                bottom = 28.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
 
+        // 로고
         Text(
             text = "Atoqu",
             color = Color.White,
-            fontSize = 44.sp,
+            fontSize = 36.sp,
             fontWeight = FontWeight.Normal,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = (-45).dp)
         )
 
-        Spacer(
-            modifier = Modifier.height(58.dp)
-        )
-
+        // 연동 버튼
         Button(
             onClick = onPairClick,
             modifier = Modifier
-                .width(142.dp)
-                .height(52.dp),
-            shape = RoundedCornerShape(28.dp),
+                .align(Alignment.Center)
+                .offset(y = 50.dp)
+                .width(116.dp)
+                .height(44.dp),
+            shape = RoundedCornerShape(22.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
                 contentColor = Color.Black
             ),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                horizontal = 0.dp,
-                vertical = 0.dp
-            )
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -75,9 +64,10 @@ fun PairingIntroScreen(
                 Text(
                     text = "연동하기",
                     color = Color.Black,
-                    fontSize = 21.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
             }
         }
