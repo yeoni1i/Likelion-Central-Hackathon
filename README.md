@@ -4,7 +4,6 @@
 >
 > <p align="center">
   <img width="1920" height="1080" alt="1" src="https://github.com/user-attachments/assets/40d03494-12fa-4c1e-b4bc-84870b294db0" />
-
 </p>
 
 ## 📝 프로젝트 소개
@@ -38,6 +37,28 @@
 * **AI 데일리 원인 분석 리포트**:
   * 시간대별 긁음 추이 및 주간 트렌드 차트 제공
   * 긁음 요인(Trigger Factor) 우선순위 분석 및 내일의 맞춤 케어 포인트 제안
+
+<br>
+
+### 🖼️ 서비스 주요 화면
+<table width="100%">
+  <tr>
+    <td align="center" width="50%">
+      <img width="1920" height="1080" alt="46" src="https://github.com/user-attachments/assets/a4ef7400-6143-4b55-b50a-6fc361bd236b" />
+    </td>
+    <td align="center" width="50%">
+      <img width="1920" height="1080" alt="42" src="https://github.com/user-attachments/assets/b60fc2e7-700e-4a04-bedf-db4dbc6640d3" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img width="1920" height="1080" alt="44" src="https://github.com/user-attachments/assets/2b5801e1-d575-447e-a737-43bb89c2f88f" />
+    </td>
+    <td align="center" width="50%">
+      <img width="1920" height="1080" alt="43" src="https://github.com/user-attachments/assets/8a84c636-2fa7-4022-89d3-0cde263f75de" />
+    </td>
+  </tr>
+</table>
 
 ---
 
