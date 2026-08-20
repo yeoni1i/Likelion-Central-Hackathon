@@ -1,5 +1,6 @@
 package com.example.atocuemobile.ui.screen.timeline.meal
 
+
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -42,7 +43,6 @@ fun MealRecordDetailScreen(
     val coroutineScope = rememberCoroutineScope()
     val dateFormatter = DateTimeFormatter.ofPattern("M월 dd일 (E)", Locale.KOREAN)
 
-    // MutableList로 안전하게 초기화
     var menuList = remember {
         if (record.menuItems.isEmpty()) {
             mutableStateListOf("", "")
@@ -172,7 +172,7 @@ fun MealRecordDetailScreen(
                 .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 1. 사진 영역
+
             item {
                 if (!record.photoUrl.isNullOrBlank()) {
                     Box(
@@ -234,7 +234,7 @@ fun MealRecordDetailScreen(
                 }
             }
 
-            // 3. 수정 가능한 메뉴 입력 필드들
+
             itemsIndexed(menuList) { index, menuText ->
                 Box(modifier = Modifier.padding(horizontal = 20.dp)) {
                     OutlinedTextField(

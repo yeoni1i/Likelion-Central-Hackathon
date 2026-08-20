@@ -88,11 +88,13 @@ fun MealRecordTab(
             log.mealType == type.name
         }
 
+
         // 해당 식사 타입에 매칭되는 첫 번째 로그의 ID를 가져오거나, 없으면 기본값 0L 부여
         val firstLog = matchedLogs.firstOrNull()
 
         MealRecord(
             id = firstLog?.id ?: 0L, // 💡 서버에서 받아온 로그의 실제 ID를 넘겨줍니다!
+
             date = date,
             mealType = type,
 
