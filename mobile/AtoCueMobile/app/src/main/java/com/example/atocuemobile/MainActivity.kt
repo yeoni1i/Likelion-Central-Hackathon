@@ -2,6 +2,7 @@ package com.example.atocuemobile
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -87,6 +88,7 @@ private object OnboardingPrefs {
         }
     }
 }
+
 private enum class AppScreen {
     LOGIN,
     SIGN_UP,
@@ -111,6 +113,9 @@ private fun AppRoot() {
     var authToken by remember { mutableStateOf<String?>(null) }
 
     var savedChildId by remember { mutableStateOf<Long?>(null) }
+
+    // 식단 캡처 화면 → 입력 화면으로 넘길 사진 Uri
+    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     val onboardingViewModel: OnboardingViewModel = viewModel()
     val registeredChildId = onboardingViewModel.registeredChildId
@@ -354,7 +359,8 @@ private fun AppRoot() {
 
             if (!showNextScreen) {
                 MealCaptureScreen(
-                    onCapturedComplete = {
+                    onCapturedComplete = { uri ->
+                        capturedImageUri = uri
                         showNextScreen = true
                     },
                     onBack = {
@@ -363,8 +369,11 @@ private fun AppRoot() {
                 )
             } else {
                 MealRecordInputScreen(
+                    capturedImageUri = capturedImageUri,
                     onBack = { showNextScreen = false },
                     onSubmitComplete = {
+                        capturedImageUri = null
+                        showNextScreen = false
                         currentScreen = AppScreen.MAIN
                     }
                 )
