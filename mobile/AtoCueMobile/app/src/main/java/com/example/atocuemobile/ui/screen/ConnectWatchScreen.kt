@@ -50,12 +50,11 @@ private val Pretendard = FontFamily.Default
 
 @Composable
 fun ConnectWatchScreen(
-    title: String = "기기 연결",
+    title: String = "워치 연결",
     code: String = "------",
     isLoading: Boolean = false,
     onRefreshCode: () -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onSkipClick: () -> Unit = {} // 💡 워치 연결 건너뛰기 콜백 추가
+    onBackClick: () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -97,7 +96,7 @@ fun ConnectWatchScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // 2. 중앙 안내 문구 (두께 Normal로 조정됨)
+            // 2. 중앙 안내 문구
             Text(
                 text = "아래의 코드를 아이의\n워치에 입력해주세요",
                 style = TextStyle(
@@ -194,37 +193,6 @@ fun ConnectWatchScreen(
                             color = PrimaryBlueColor
                         )
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // 5. [개발용] 워치 연결 건너뛰기 버튼 (하단 고정 배치)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable(onClick = onSkipClick),
-                    color = PrimaryBlueColor
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "⚡ [개발용] 워치 연결 건너뛰기",
-                            style = TextStyle(
-                                fontFamily = Pretendard,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White
-                            )
-                        )
-                    }
                 }
             }
         }

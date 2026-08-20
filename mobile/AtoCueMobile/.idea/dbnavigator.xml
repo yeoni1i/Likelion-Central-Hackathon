@@ -11,15 +11,11 @@
   </component>
   <component name="DBNavigator.Project.DatabaseAssistantManager">
     <assistants>
-      <assistant-state connection-id="7d033d13-8bc5-45c7-a0fc-36204454d835" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
-        <tools />
-        <mcp-servers />
-      </assistant-state>
       <assistant-state connection-id="7d033d13-8bc5-45c7-a0fc-36204454d835" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
         <tools />
         <mcp-servers />
       </assistant-state>
-      <assistant-state connection-id="234da8a7-3e39-45cd-8381-bd8eca8c796f" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+      <assistant-state connection-id="7d033d13-8bc5-45c7-a0fc-36204454d835" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
         <tools />
         <mcp-servers />
       </assistant-state>
@@ -27,11 +23,15 @@
         <tools />
         <mcp-servers />
       </assistant-state>
-      <assistant-state connection-id="3d5c00d4-3a87-4cf5-b247-a32b4f8161be" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
+      <assistant-state connection-id="234da8a7-3e39-45cd-8381-bd8eca8c796f" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
         <tools />
         <mcp-servers />
       </assistant-state>
       <assistant-state connection-id="3d5c00d4-3a87-4cf5-b247-a32b4f8161be" assistant-type="PUBLIC" default-profile-name="" selected-chat-id="" availability="AVAILABLE" acknowledgement="NONE" selected="true">
+        <tools />
+        <mcp-servers />
+      </assistant-state>
+      <assistant-state connection-id="3d5c00d4-3a87-4cf5-b247-a32b4f8161be" assistant-type="SELECT_AI" default-profile-name="" selected-chat-id="" availability="UNAVAILABLE" acknowledgement="NONE">
         <tools />
         <mcp-servers />
       </assistant-state>
@@ -48,7 +48,7 @@
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="3d5c00d4-3a87-4cf5-b247-a32b4f8161be">
-      <console name="Connection" type="STANDARD" schema="hackaton_db" session="Main"><![CDATA[CREATE TABLE IF NOT EXISTS device_pairing_codes (
+      <console name="Connection" type="STANDARD" schema="hackaton_db" session="Main">CREATE TABLE IF NOT EXISTS device_pairing_codes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(6) NOT NULL UNIQUE,
     parent_user_id BIGINT NOT NULL,
@@ -62,13 +62,13 @@ CREATE TABLE IF NOT EXISTS watch_devices (
     device_name VARCHAR(255) NOT NULL,
     parent_user_id BIGINT NOT NULL,
     last_connected_at DATETIME(6) NOT NULL
-);]]></console>
+);</console>
     </connection>
     <connection id="7d033d13-8bc5-45c7-a0fc-36204454d835">
       <console name="Connection 1" type="STANDARD" schema="hackaton_db" session="Main" />
     </connection>
     <connection id="234da8a7-3e39-45cd-8381-bd8eca8c796f">
-      <console name="Connection 2" type="STANDARD" schema="hackaton_db" session="Main"><![CDATA[-- 1. 6번 유저의 아이 피부 상태 데이터 삭제
+      <console name="Connection 2" type="STANDARD" schema="hackaton_db" session="Main">-- 1. 6번 유저의 아이 피부 상태 데이터 삭제
 DELETE FROM child_skin_conditions 
 WHERE child_id IN (SELECT id FROM children WHERE user_id = 6);
 
@@ -82,7 +82,7 @@ WHERE user_id = 6;
 
 SELECT * FROM children WHERE user_id = 6;
 
-COMMIT;]]></console>
+COMMIT;</console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
@@ -112,365 +112,7 @@ COMMIT;]]></console>
         <migrated value="true" />
       </state>
     </states>
-    <connections>
-      <connection source-id="" id="3d5c00d4-3a87-4cf5-b247-a32b4f8161be" active="true" signed="true">
-        <database>
-          <name value="Connection" />
-          <description value="" />
-          <database-type value="MYSQL" />
-          <config-type value="BASIC" />
-          <database-version value="8.4" />
-          <driver-source value="BUNDLED" />
-          <driver-library value="" />
-          <driver value="" />
-          <url-type value="DATABASE" />
-          <host value="atocuedb.cwzuyeq8i5ze.us-east-1.rds.amazonaws.com" />
-          <port value="3306" />
-          <database value="hackaton_db" />
-          <tns-folder value="" />
-          <tns-profile value="" />
-          <server-type value="" />
-          <protocol value="" />
-          <url-parameters />
-          <type value="USER_PASSWORD" />
-          <user value="admin" />
-          <token-type value="" />
-          <token-config-file value="" />
-          <token-profile value="" />
-          <adb-compartment-ocid value="" />
-          <adb-database-ocid value="" />
-          <azure-token-database-id-uri value="" />
-          <azure-token-tenant-id value="" />
-          <azure-token-client-id value="" />
-          <azure-token-client-certificate-file value="" />
-          <session-user value="admin@58.142.157.208" />
-        </database>
-        <properties>
-          <auto-commit value="false" />
-        </properties>
-        <ssh-settings>
-          <active value="false" />
-          <proxy-host value="" />
-          <proxy-port value="22" />
-          <proxy-user value="" />
-          <auth-type value="PASSWORD" />
-          <key-file value="" />
-        </ssh-settings>
-        <ssl-settings>
-          <active value="false" />
-          <certificate-authority-file value="" />
-          <client-certificate-file value="" />
-          <client-key-file value="" />
-        </ssl-settings>
-        <details>
-          <charset value="UTF-8" />
-          <session-management value="true" />
-          <ddl-file-binding value="true" />
-          <database-logging value="true" />
-          <connect-automatically value="true" />
-          <restore-workspace value="true" />
-          <restore-workspace-deep value="false" />
-          <environment-type value="default" />
-          <connectivity-timeout value="30" />
-          <idle-time-to-disconnect value="30" />
-          <idle-time-to-disconnect-pool value="5" />
-          <credential-expiry-time value="10" />
-          <max-connection-pool-size value="7" />
-          <alternative-statement-delimiter value="" />
-        </details>
-        <debugger>
-          <compile-dependencies value="true" />
-          <tcp-host-address value="" />
-          <tcp-port-from value="4000" />
-          <tcp-port-to value="4999" />
-          <jdwp-tunnel-type value="NONE" />
-          <debugger-type value="ASK" />
-          <reverse-ssh-tunnel>
-            <host value="" />
-            <port value="22" />
-            <bind-host value="127.0.0.1" />
-            <bind-port value="0" />
-            <auth-type value="PASSWORD" />
-            <user value="" />
-            <key-file value="" />
-          </reverse-ssh-tunnel>
-        </debugger>
-        <object-filters hide-empty-schemas="false" hide-pseudo-columns="false" hide-audit-columns="false">
-          <object-filters />
-          <object-type-filter use-master-settings="true">
-            <object-type name="ROLE" enabled="true" />
-            <object-type name="PRIVILEGE" enabled="true" />
-            <object-type name="CHARSET" enabled="true" />
-            <object-type name="TABLE" enabled="true" />
-            <object-type name="VIEW" enabled="true" />
-            <object-type name="JSON_VIEW" enabled="true" />
-            <object-type name="MATERIALIZED_VIEW" enabled="true" />
-            <object-type name="NESTED_TABLE" enabled="true" />
-            <object-type name="COLUMN" enabled="true" />
-            <object-type name="INDEX" enabled="true" />
-            <object-type name="CONSTRAINT" enabled="true" />
-            <object-type name="DATASET_TRIGGER" enabled="true" />
-            <object-type name="DATABASE_TRIGGER" enabled="true" />
-            <object-type name="SYNONYM" enabled="true" />
-            <object-type name="SEQUENCE" enabled="true" />
-            <object-type name="PROCEDURE" enabled="true" />
-            <object-type name="FUNCTION" enabled="true" />
-            <object-type name="PACKAGE" enabled="true" />
-            <object-type name="TYPE" enabled="true" />
-            <object-type name="TYPE_ATTRIBUTE" enabled="true" />
-            <object-type name="ARGUMENT" enabled="true" />
-            <object-type name="JAVA_CLASS" enabled="true" />
-            <object-type name="JAVA_FIELD" enabled="true" />
-            <object-type name="JAVA_METHOD" enabled="true" />
-            <object-type name="JAVA_RESOURCE" enabled="true" />
-            <object-type name="DIMENSION" enabled="true" />
-            <object-type name="CLUSTER" enabled="true" />
-            <object-type name="DBLINK" enabled="true" />
-            <object-type name="CREDENTIAL" enabled="true" />
-            <object-type name="AI_PROFILE" enabled="true" />
-            <object-type name="AI_MODEL" enabled="true" />
-          </object-type-filter>
-        </object-filters>
-      </connection>
-      <connection source-id="" id="7d033d13-8bc5-45c7-a0fc-36204454d835" active="true" signed="true">
-        <database>
-          <name value="Connection 1" />
-          <description value="" />
-          <database-type value="MYSQL" />
-          <config-type value="BASIC" />
-          <database-version value="8.4" />
-          <driver-source value="BUNDLED" />
-          <driver-library value="" />
-          <driver value="" />
-          <url-type value="DATABASE" />
-          <host value="atocuedb.cwzuyeq8i5ze.us-east-1.rds.amazonaws.com" />
-          <port value="3306" />
-          <database value="hackaton_db" />
-          <tns-folder value="" />
-          <tns-profile value="" />
-          <server-type value="" />
-          <protocol value="" />
-          <url-parameters />
-          <type value="USER_PASSWORD" />
-          <user value="admin" />
-          <token-type value="" />
-          <token-config-file value="" />
-          <token-profile value="" />
-          <adb-compartment-ocid value="" />
-          <adb-database-ocid value="" />
-          <azure-token-database-id-uri value="" />
-          <azure-token-tenant-id value="" />
-          <azure-token-client-id value="" />
-          <azure-token-client-certificate-file value="" />
-          <session-user value="admin@58.142.157.208" />
-        </database>
-        <properties>
-          <auto-commit value="false" />
-        </properties>
-        <ssh-settings>
-          <active value="false" />
-          <proxy-host value="" />
-          <proxy-port value="22" />
-          <proxy-user value="" />
-          <auth-type value="PASSWORD" />
-          <key-file value="" />
-        </ssh-settings>
-        <ssl-settings>
-          <active value="false" />
-          <certificate-authority-file value="" />
-          <client-certificate-file value="" />
-          <client-key-file value="" />
-        </ssl-settings>
-        <details>
-          <charset value="UTF-8" />
-          <session-management value="true" />
-          <ddl-file-binding value="true" />
-          <database-logging value="true" />
-          <connect-automatically value="true" />
-          <restore-workspace value="true" />
-          <restore-workspace-deep value="false" />
-          <environment-type value="default" />
-          <connectivity-timeout value="30" />
-          <idle-time-to-disconnect value="30" />
-          <idle-time-to-disconnect-pool value="5" />
-          <credential-expiry-time value="10" />
-          <max-connection-pool-size value="7" />
-          <alternative-statement-delimiter value="" />
-        </details>
-        <debugger>
-          <compile-dependencies value="true" />
-          <tcp-host-address value="" />
-          <tcp-port-from value="4000" />
-          <tcp-port-to value="4999" />
-          <jdwp-tunnel-type value="NONE" />
-          <debugger-type value="ASK" />
-          <reverse-ssh-tunnel>
-            <host value="" />
-            <port value="22" />
-            <bind-host value="127.0.0.1" />
-            <bind-port value="0" />
-            <auth-type value="PASSWORD" />
-            <user value="" />
-            <key-file value="" />
-          </reverse-ssh-tunnel>
-        </debugger>
-        <object-filters hide-empty-schemas="false" hide-pseudo-columns="false" hide-audit-columns="false">
-          <object-filters />
-          <object-type-filter use-master-settings="true">
-            <object-type name="ROLE" enabled="true" />
-            <object-type name="PRIVILEGE" enabled="true" />
-            <object-type name="CHARSET" enabled="true" />
-            <object-type name="TABLE" enabled="true" />
-            <object-type name="VIEW" enabled="true" />
-            <object-type name="JSON_VIEW" enabled="true" />
-            <object-type name="MATERIALIZED_VIEW" enabled="true" />
-            <object-type name="NESTED_TABLE" enabled="true" />
-            <object-type name="COLUMN" enabled="true" />
-            <object-type name="INDEX" enabled="true" />
-            <object-type name="CONSTRAINT" enabled="true" />
-            <object-type name="DATASET_TRIGGER" enabled="true" />
-            <object-type name="DATABASE_TRIGGER" enabled="true" />
-            <object-type name="SYNONYM" enabled="true" />
-            <object-type name="SEQUENCE" enabled="true" />
-            <object-type name="PROCEDURE" enabled="true" />
-            <object-type name="FUNCTION" enabled="true" />
-            <object-type name="PACKAGE" enabled="true" />
-            <object-type name="TYPE" enabled="true" />
-            <object-type name="TYPE_ATTRIBUTE" enabled="true" />
-            <object-type name="ARGUMENT" enabled="true" />
-            <object-type name="JAVA_CLASS" enabled="true" />
-            <object-type name="JAVA_FIELD" enabled="true" />
-            <object-type name="JAVA_METHOD" enabled="true" />
-            <object-type name="JAVA_RESOURCE" enabled="true" />
-            <object-type name="DIMENSION" enabled="true" />
-            <object-type name="CLUSTER" enabled="true" />
-            <object-type name="DBLINK" enabled="true" />
-            <object-type name="CREDENTIAL" enabled="true" />
-            <object-type name="AI_PROFILE" enabled="true" />
-            <object-type name="AI_MODEL" enabled="true" />
-          </object-type-filter>
-        </object-filters>
-      </connection>
-      <connection source-id="" id="234da8a7-3e39-45cd-8381-bd8eca8c796f" active="true" signed="true">
-        <database>
-          <name value="Connection 2" />
-          <description value="" />
-          <database-type value="MYSQL" />
-          <config-type value="BASIC" />
-          <database-version value="8.4" />
-          <driver-source value="BUNDLED" />
-          <driver-library value="" />
-          <driver value="" />
-          <url-type value="DATABASE" />
-          <host value="atocuedb.cwzuyeq8i5ze.us-east-1.rds.amazonaws.com" />
-          <port value="3306" />
-          <database value="hackaton_db" />
-          <tns-folder value="" />
-          <tns-profile value="" />
-          <server-type value="" />
-          <protocol value="" />
-          <url-parameters />
-          <type value="USER_PASSWORD" />
-          <user value="admin" />
-          <token-type value="" />
-          <token-config-file value="" />
-          <token-profile value="" />
-          <adb-compartment-ocid value="" />
-          <adb-database-ocid value="" />
-          <azure-token-database-id-uri value="" />
-          <azure-token-tenant-id value="" />
-          <azure-token-client-id value="" />
-          <azure-token-client-certificate-file value="" />
-          <session-user value="admin@58.142.157.208" />
-        </database>
-        <properties>
-          <auto-commit value="false" />
-        </properties>
-        <ssh-settings>
-          <active value="false" />
-          <proxy-host value="" />
-          <proxy-port value="22" />
-          <proxy-user value="" />
-          <auth-type value="PASSWORD" />
-          <key-file value="" />
-        </ssh-settings>
-        <ssl-settings>
-          <active value="false" />
-          <certificate-authority-file value="" />
-          <client-certificate-file value="" />
-          <client-key-file value="" />
-        </ssl-settings>
-        <details>
-          <charset value="UTF-8" />
-          <session-management value="true" />
-          <ddl-file-binding value="true" />
-          <database-logging value="true" />
-          <connect-automatically value="true" />
-          <restore-workspace value="true" />
-          <restore-workspace-deep value="false" />
-          <environment-type value="default" />
-          <connectivity-timeout value="30" />
-          <idle-time-to-disconnect value="30" />
-          <idle-time-to-disconnect-pool value="5" />
-          <credential-expiry-time value="10" />
-          <max-connection-pool-size value="7" />
-          <alternative-statement-delimiter value="" />
-        </details>
-        <debugger>
-          <compile-dependencies value="true" />
-          <tcp-host-address value="" />
-          <tcp-port-from value="4000" />
-          <tcp-port-to value="4999" />
-          <jdwp-tunnel-type value="NONE" />
-          <debugger-type value="ASK" />
-          <reverse-ssh-tunnel>
-            <host value="" />
-            <port value="22" />
-            <bind-host value="127.0.0.1" />
-            <bind-port value="0" />
-            <auth-type value="PASSWORD" />
-            <user value="" />
-            <key-file value="" />
-          </reverse-ssh-tunnel>
-        </debugger>
-        <object-filters hide-empty-schemas="false" hide-pseudo-columns="false" hide-audit-columns="false">
-          <object-filters />
-          <object-type-filter use-master-settings="true">
-            <object-type name="ROLE" enabled="true" />
-            <object-type name="PRIVILEGE" enabled="true" />
-            <object-type name="CHARSET" enabled="true" />
-            <object-type name="TABLE" enabled="true" />
-            <object-type name="VIEW" enabled="true" />
-            <object-type name="JSON_VIEW" enabled="true" />
-            <object-type name="MATERIALIZED_VIEW" enabled="true" />
-            <object-type name="NESTED_TABLE" enabled="true" />
-            <object-type name="COLUMN" enabled="true" />
-            <object-type name="INDEX" enabled="true" />
-            <object-type name="CONSTRAINT" enabled="true" />
-            <object-type name="DATASET_TRIGGER" enabled="true" />
-            <object-type name="DATABASE_TRIGGER" enabled="true" />
-            <object-type name="SYNONYM" enabled="true" />
-            <object-type name="SEQUENCE" enabled="true" />
-            <object-type name="PROCEDURE" enabled="true" />
-            <object-type name="FUNCTION" enabled="true" />
-            <object-type name="PACKAGE" enabled="true" />
-            <object-type name="TYPE" enabled="true" />
-            <object-type name="TYPE_ATTRIBUTE" enabled="true" />
-            <object-type name="ARGUMENT" enabled="true" />
-            <object-type name="JAVA_CLASS" enabled="true" />
-            <object-type name="JAVA_FIELD" enabled="true" />
-            <object-type name="JAVA_METHOD" enabled="true" />
-            <object-type name="JAVA_RESOURCE" enabled="true" />
-            <object-type name="DIMENSION" enabled="true" />
-            <object-type name="CLUSTER" enabled="true" />
-            <object-type name="DBLINK" enabled="true" />
-            <object-type name="CREDENTIAL" enabled="true" />
-            <object-type name="AI_PROFILE" enabled="true" />
-            <object-type name="AI_MODEL" enabled="true" />
-          </object-type-filter>
-        </object-filters>
-      </connection>
-    </connections>
+    <connections />
     <browser-settings>
       <general>
         <display-mode value="TABBED" />

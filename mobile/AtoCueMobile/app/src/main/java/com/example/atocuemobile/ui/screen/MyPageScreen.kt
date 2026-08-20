@@ -23,10 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,142 +53,126 @@ fun MyPageScreen(
     onDeviceManageClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
-    var showDeviceManagementModal by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            bottomBar = {
-                BottomNavigationBar(
-                    selectedTab = selectedTab,
-                    onTabSelected = onTabSelected
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                selectedTab = selectedTab,
+                onTabSelected = onTabSelected
+            )
+        },
+        containerColor = BaseBackgroundColor
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    bottom = innerPadding.calculateBottomPadding()
                 )
-            },
-            containerColor = BaseBackgroundColor
-        ) { innerPadding ->
-            Column(
+        ) {
+            // 1. 상단 로고 헤더
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        top = innerPadding.calculateTopPadding(),
-                        bottom = innerPadding.calculateBottomPadding()
-                    )
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 0.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1. 상단 로고 헤더
-                Row(
+                Image(
+                    painter = painterResource(id = R.drawable.atocue),
+                    contentDescription = "AtoCue Logo",
+                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier.height(16.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // 2. 프로필 영역
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 0.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                        .offset(x = (-28).dp)
+                        .size(130.dp)
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.atocue),
-                        contentDescription = "AtoCue Logo",
-                        contentScale = ContentScale.FillHeight,
-                        modifier = Modifier.height(16.dp)
+                        painter = painterResource(id = R.drawable.p),
+                        contentDescription = "보호자 프로필",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(180.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // 2. 프로필 영역
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.offset(x = (-20).dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .offset(x = (-28).dp)
-                            .size(130.dp)
-                            .clip(CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.p),
-                            contentDescription = "보호자 프로필",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(180.dp)
+                    Text(
+                        text = "보호자",
+                        style = TextStyle(
+                            fontFamily = Pretendard,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                            lineHeight = 24.sp,
+                            color = SubLabelGray
                         )
-                    }
+                    )
 
-                    Column(
-                        modifier = Modifier.offset(x = (-20).dp),
-                        horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "보호자",
-                            style = TextStyle(
-                                fontFamily = Pretendard,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Normal,
-                                lineHeight = 24.sp,
-                                color = SubLabelGray
-                            )
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Text(
+                        text = guardianName,
+                        style = TextStyle(
+                            fontFamily = Pretendard,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            lineHeight = 27.sp,
+                            color = Color(0xFF000000)
                         )
-
-                        Spacer(modifier = Modifier.height(2.dp))
-
-                        Text(
-                            text = guardianName,
-                            style = TextStyle(
-                                fontFamily = Pretendard,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                lineHeight = 27.sp,
-                                color = Color(0xFF000000)
-                            )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 3. 하단 메뉴 영역 (흰색)
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    color = Color.White
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                    ) {
-                        MyPageMenuItem(
-                            title = "기기 관리",
-                            onClick = {
-                                onDeviceManageClick()
-                                showDeviceManagementModal = true
-                            }
-                        )
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 24.dp),
-                            thickness = 1.dp,
-                            color = DividerColor
-                        )
-
-                        MyPageMenuItem(
-                            title = "로그아웃",
-                            onClick = onLogoutClick
-                        )
-                    }
+                    )
                 }
             }
-        }
 
-        // 기기 관리 모달 (6자리 페어링 코드 연동) - 타이틀을 "기기 연결"로 수정
-        if (showDeviceManagementModal) {
-            ConnectWatchScreen(
-                title = "기기 연결",
-                code = pairingCode,
-                onBackClick = { showDeviceManagementModal = false }
-            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 3. 하단 메뉴 영역 (흰색)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                color = Color.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                ) {
+                    MyPageMenuItem(
+                        title = "기기 관리",
+                        onClick = onDeviceManageClick
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 24.dp),
+                        thickness = 1.dp,
+                        color = DividerColor
+                    )
+
+                    MyPageMenuItem(
+                        title = "로그아웃",
+                        onClick = onLogoutClick
+                    )
+                }
+            }
         }
     }
 }

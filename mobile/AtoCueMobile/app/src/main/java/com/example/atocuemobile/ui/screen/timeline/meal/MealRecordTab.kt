@@ -31,7 +31,8 @@ import androidx.compose.ui.draw.clip
 @Composable
 fun MealRecordTab(
     date: LocalDate,
-    onAddRecordClick: () -> Unit
+    onAddRecordClick: () -> Unit,
+    onRecordClick: (MealRecord) -> Unit
 ) {
 
     var dailyLogs by remember {
@@ -103,7 +104,18 @@ fun MealRecordTab(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         items(records) { record ->
-            MealRecordCard(record = record, onClick = onAddRecordClick)
+            MealRecordCard(
+                record = record,
+                onClick = {
+                    if (!record.photoUrl.isNullOrBlank()) {
+                        // 이미 등록된 기록이 있으면 상세보기로 이동
+                        onRecordClick(record)
+                    } else {
+                        // 비어있으면 새로 등록(카메라)으로 이동
+                        onAddRecordClick()
+                    }
+                }
+            )
         }
 
         item {

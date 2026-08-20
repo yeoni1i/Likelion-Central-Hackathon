@@ -18,6 +18,7 @@ import com.example.atocuemobile.ui.screen.timeline.component.TimelineTopBar
 import com.example.atocuemobile.ui.screen.timeline.component.WeekCalendar
 import com.example.atocuemobile.ui.screen.timeline.life.LifeRecordTab
 import com.example.atocuemobile.ui.screen.timeline.meal.MealRecordTab
+import com.example.atocuemobile.ui.screen.timeline.model.MealRecord
 import com.example.atocuemobile.ui.screen.timeline.scratch.ScratchDetectTab
 import com.example.atocuemobile.viewmodel.HomeViewModel
 import java.time.LocalDate
@@ -36,6 +37,7 @@ private val tabTitles = listOf("긁음 감지", "식단기록", "생활기록")
 fun TimelineScreen(
     homeViewModel: HomeViewModel,
     onAddRecordClick: () -> Unit,
+    onRecordClick: (MealRecord) -> Unit,
     onNavigateToLifeRecordInput: () -> Unit,
     selectedBottomTab: BottomNavTab = BottomNavTab.TIMELINE,
     onBottomTabSelected: (BottomNavTab) -> Unit = {}
@@ -121,7 +123,8 @@ fun TimelineScreen(
 
                 1 -> MealRecordTab(
                     date = selectedDate,
-                    onAddRecordClick = onAddRecordClick
+                    onAddRecordClick = onAddRecordClick,
+                    onRecordClick = onRecordClick
                 )
 
                 2 -> LifeRecordTab(
