@@ -17,6 +17,8 @@ public record DailyReportResponse(
 
         List<DailyScratchCountDto> weeklyTrend,
 
-        ReportAiAnalysisDto analysis
+        ReportAiAnalysisDto analysis,
+
+        RiskFoodSectionDto riskFoodSection
 ) {
 }
