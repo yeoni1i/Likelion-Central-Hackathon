@@ -40,10 +40,27 @@ public class UserService {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
-        boolean isOnboarded = childRepository.findByUserId(user.getId()).isPresent();
+        Optional<Child> child =
+                childRepository.findByUserId(user.getId());
 
-        String token = jwtTokenProvider.createToken(user.getId(), user.getUsername());
-        return new LoginResponse(token, user.getId(), isOnboarded);
+        boolean isOnboarded = child.isPresent();
+
+        Long childId =
+                child.map(Child::getId)
+                        .orElse(null);
+
+        String token =
+                jwtTokenProvider.createToken(
+                        user.getId(),
+                        user.getUsername()
+                );
+
+        return new LoginResponse(
+                token,
+                user.getId(),
+                isOnboarded,
+                childId
+        );
     }
 
     @Transactional
