@@ -132,12 +132,6 @@ interface AtoCueApiService {
         @Part image: MultipartBody.Part
     ): DailyLogResponse
 
-    @GET("daily-logs")
-    suspend fun getDailyLogs(
-        @Query("date") date: String
-    ): List<DailyLogResponse>
-
-
     // 일간 긁음 통계 조회
     @GET("analysis/reports/daily")
     suspend fun getDailyAnalysis(
@@ -168,4 +162,18 @@ interface AtoCueApiService {
         @Query("baseDate") baseDate: String,
         @Query("days") days: Int = 30
     ): Response<RiskFoodListResponse>
+
+    // 🌟 1. 기존 화면들(생활 기록 등) 호환용 (이미지 없이 텍스트만 전송)
+    @GET("daily-logs")
+    suspend fun getDailyLogs(
+        @Query("date") date: String
+    ): List<DailyLogResponse>
+
+    // 🌟 2. 식단 등록 화면용 (텍스트 + 이미지 멀티파트 전송)
+    @Multipart
+    @POST("daily-logs")
+    suspend fun createDailyLog(
+        @Part("request") request: RequestBody,
+        @Part image: MultipartBody.Part? = null
+    ): DailyLogResponse
 }

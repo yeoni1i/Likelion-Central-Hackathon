@@ -369,7 +369,7 @@ private fun AppRoot() {
                 )
             } else {
                 MealRecordInputScreen(
-                    capturedImageUri = capturedImageUri,
+                    imageUri = capturedImageUri,
                     onBack = { showNextScreen = false },
                     onSubmitComplete = {
                         capturedImageUri = null
