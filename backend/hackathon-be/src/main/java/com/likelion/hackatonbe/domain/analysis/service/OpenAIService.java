@@ -1,20 +1,30 @@
 package com.likelion.hackatonbe.domain.analysis.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.likelion.hackatonbe.domain.analysis.dto.ReportAiAnalysisDto;
 import com.openai.client.OpenAIClient;
 import com.openai.models.ChatModel;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class OpenAIService {
 
     private final OpenAIClient openAIClient;
+    private final ObjectMapper objectMapper;
 
-    public OpenAIService(OpenAIClient openAIClient) {
+    public OpenAIService(
+            OpenAIClient openAIClient,
+            ObjectMapper objectMapper
+    ) {
         this.openAIClient = openAIClient;
+        this.objectMapper = objectMapper;
     }
 
-    public String analyze(
+    public ReportAiAnalysisDto analyze(
             int scratchCount,
             double totalScratchSeconds,
             String hourlyScratch,
@@ -24,158 +34,427 @@ public class OpenAIService {
             String dailyNotes,
             Double temperature,
             Integer humidity,
-            String airQuality
-    ){
+            String airQuality,
+            List<String> triggerCandidates
+    ) {
+        String triggerCandidatesText;
+
+        if (triggerCandidates == null || triggerCandidates.isEmpty()) {
+
+            triggerCandidatesText = "후보 없음";
+
+        } else {
+
+            triggerCandidatesText =
+                    IntStream.range(
+                                    0,
+                                    triggerCandidates.size()
+                            )
+                            .mapToObj(index -> {
+
+                                String raw =
+                                        triggerCandidates.get(index);
+
+                                String[] parts =
+                                        raw.split("\\|", 3);
+
+                                String type =
+                                        parts.length > 0
+                                                ? parts[0]
+                                                : "UNKNOWN";
+
+                                String factor =
+                                        parts.length > 1
+                                                ? parts[1]
+                                                : raw;
+
+                                String score =
+                                        parts.length > 2
+                                                ? parts[2]
+                                                : "0";
+                                return String.format(
+                                        "%d순위 | type=%s | factor=%s | score=%s",
+                                        index + 1,
+                                        type,
+                                        factor,
+                                        score
+                                );        })
+
+
+                            .collect(
+                                    Collectors.joining("\n")
+                            );
+        }
 
         String prompt = """
-                당신은 피부 상태와 생활 패턴을 함께 살펴보는 개인 건강 리포트 AI입니다.
-                
-                        사용자의 긁음 데이터만을 중심으로 분석하지 말고,
-                        식단, 날씨, 샤워, 보습, 긁음 기록을 동일한 중요도로 종합하여
-                        오늘 사용자에게 가장 의미 있는 생활 패턴 또는 관리 포인트를 찾아주세요.
-                
-                        목표는 특정 자극원을 반드시 찾아내는 것이 아닙니다.
-                        명확한 연관성이 없으면 자극원을 억지로 제시하지 말고,
-                        현재 상태를 자연스럽게 요약하고 오늘 실천할 수 있는 관리 행동을 제안하세요.
+                당신은 아토피 피부 관리 서비스의 일간 리포트를 작성하는 AI입니다.
+
+                사용자의 오늘 데이터와 최근 7일 데이터를 함께 분석하여
+                사용자가 이해하기 쉬운 일간 리포트 문구를 생성하세요.
+
+
+                [중요 원칙]
+
+                1. 제공되지 않은 데이터는 절대 추측하지 마세요.
+
+                2. 긁음 횟수, 긁음 시간, 식단, 생활 기록, 환경 정보를
+                   함께 고려하여 분석하세요.
+
+                3. 긁음 데이터만 지나치게 강조하지 마세요.
+
+                4. 데이터가 부족한 경우
+                   "현재 기록만으로 뚜렷한 연관성을 판단하기 어렵습니다."
+                   와 같이 데이터 부족 사실을 명확히 표현하세요.
+
+                5. 특정 음식, 날씨, 생활 습관을
+                   긁음의 직접적인 원인이라고 단정하지 마세요.
+
+                6. 의학적 진단, 알레르기 진단,
+                   질환에 대한 판단을 하지 마세요.
+
+                7. 동일한 내용을 summary, pattern, carePoint에서
+                   반복하지 마세요.
+
+                8. 사용자가 실제로 이해하고 행동할 수 있는
+                   짧고 자연스러운 문장으로 작성하세요.
+
 
                 [오늘 긁음 기록]
-                
+
                 긁음 횟수: %d회
                 총 긁음 시간: %.1f초
-                
-                [오늘 시간대별 긁음]
+
+
+                [오늘 시간대별 긁음 기록]
+
                 %s
-                
+
+
                 [최근 7일 긁음 기록]
+
                 %s
-                
+
+
                 [오늘 식단]
+
                 %s
-                
+
+
                 [최근 7일 식단]
+
                 %s
                 
+                [백엔드 데이터 분석으로 선정된 자극 요인 후보]
+                
+                %s
+
+
                 [오늘 생활 기록]
+
                 %s
-                
+
+
                 [오늘 환경 정보]
-                
+
                 기온: %s
                 습도: %s
                 미세먼지 상태: %s
-                
+
+
                 [분석 방법]
+
+                먼저 오늘의 전체적인 상태를 파악하세요.
+
+                최근 7일 긁음 기록과 오늘의 긁음 기록을 비교하여
+                평소와 다른 변화가 있는지 확인하세요.
+
+                오늘 긁음이 존재하는 경우
+                특정 시간대에 긁음이 집중되었는지 확인하세요.
+
+                식단의 경우,
+                오늘 섭취한 음식이 최근 7일 동안 다른 날짜에도 등장했는지 확인하세요.
+
+                특정 음식이 등장한 여러 날짜에서
+                긁음 증가가 반복적으로 함께 관찰되는 경우에만
+                자극 요인 후보로 고려하세요.
+
+                단 한 번 음식과 긁음 증가가 같이 나타난 것만으로는
+                자극 요인 후보로 선정하지 마세요.
+
+                오늘 식단만 존재하고 과거 식단 데이터가 부족하다면
+                음식과 긁음 사이의 연관성을 판단하지 마세요.
+
+                생활 기록에 샤워 횟수 또는 보습제 사용 횟수가 있다면
+                현재 피부 관리 패턴을 설명하는 데 함께 활용하세요.
+
+                환경 정보는 오늘의 상태를 설명하는 참고 정보로 사용할 수 있습니다.
+
+                하지만 과거 환경 데이터가 입력되지 않은 경우
+                최근 7일 동안 같은 날씨였다고 추측해서는 안 됩니다.
+
+
+                [summary 작성 규칙]
+
+                오늘의 전체적인 상태를 1~2문장으로 설명하세요.
+
+                오늘 긁음이 적거나 없고 최근 기록도 안정적이라면
+                안정적인 흐름이라고 설명할 수 있습니다.
+
+                반대로 오늘 긁음이 최근 기록보다 눈에 띄게 많다면
+                평소보다 긁음이 증가했다고 설명할 수 있습니다.
+
+                단순히 입력된 숫자를 나열하지 말고
+                사용자가 이해할 수 있도록 상태를 해석하세요.
+
+
+                [pattern 작성 규칙]
+
+                오늘과 최근 기록을 비교했을 때
+                가장 의미 있는 패턴 하나를 설명하세요.
+
+                예를 들어 다음과 같은 패턴을 확인할 수 있습니다.
+
+                - 특정 시간대에 긁음 집중
+                - 최근 7일 평균과 비교한 긁음 변화
+                - 특정 음식이 등장한 날의 반복적인 긁음 증가
+                - 생활 관리 기록의 변화
+
+                특별한 변화가 확인되지 않는다면
+                "뚜렷한 변화는 확인되지 않았습니다."
+                와 같이 자연스럽게 작성하세요.
+
+                오늘 긁음 기록이 0회라면
+                존재하지 않는 시간대별 긁음 패턴을 만들어내지 마세요.
+
+
+                [carePoint 작성 규칙]
+
+                오늘 사용자가 실천할 수 있는 관리 행동 하나를 제안하세요.
+
+                현재 데이터와 관련된 행동이어야 합니다.
+
+                예를 들어 생활 기록이 부족하다면
+                샤워나 보습 기록을 추가하도록 제안할 수 있습니다.
+
+                보습 기록이 없다고 해서
+                사용자가 실제로 보습을 하지 않았다고 단정하지 마세요.
+
+                "건강을 관리하세요",
+                "피부를 잘 관리하세요"와 같이
+                지나치게 일반적인 표현은 피하세요.
+
+
+                                [자극 요인 후보 작성 규칙]
                 
-                - 먼저 오늘의 긁음 횟수와 총 긁음 시간을 최근 7일 기록과 비교하세요.
-                - 오늘 긁음이 평소보다 증가했는지 확인하세요.
-                - 특정 시간대에 긁음이 집중되었는지도 확인하세요.
-                - 식단을 분석하세요.
-                  오늘 먹은 음식이 최근 7일 중 다른 날짜에도 등장했는지 확인하세요.
-                  같은 음식을 먹은 날의 긁음 기록을 비교하세요.
-                  특정 음식이 긁음이 많았던 날 반복적으로 등장하는 경우에만 후보로 고려하세요.
-                  단 한 번 같이 등장한 음식은 의미 있는 자극 요인으로 판단하지 마세요.
-                - 환경 정보를 분석하세요.
-                  오늘의 기온, 습도, 미세먼지 상태를 확인하세요.
-                  단, 현재 제공된 데이터만으로 과거 환경과 비교할 수 없다면
-                   최근 7일 동안 같은 환경이 지속되었다고 추정하지 마세요.
-                - 생활 기록을 확인하세요.
-                  생활 기록에 샤워, 보습 등 피부 관리와 관련된 정보가 있다면 함께 고려하세요.
-                -기록에 없는 행동이나 조건은 추측하지 마세요.
-                -각 후보에 대해 다음 기준을 고려하세요.
-                 긁음 증가와 시간적으로 함께 나타났는가?
-                 동일한 패턴이 여러 날 반복되었는가?
-                 긁음이 적었던 날과 비교했을 때 차이가 있는가?
-                 다른 요인도 동시에 변하여 하나의 요인만으로 설명하기 어려운가?
-                - 근거가 가장 강한 요인을 최대 1개만 선정하세요.
-                - 충분한 근거가 없다면 억지로 자극 요인을 선정하지 마세요.
-   
-                [중요한 분석 원칙]
+                                백엔드에서 실제 최근 7일 데이터를 계산하여
+                                자극 요인 후보와 순위를 제공합니다.
+                                
+                                reason은 최종 사용자에게 직접 보여주는 문장입니다.
                 
-                        상관관계와 인과관계를 구분하세요.
-                        음식이나 환경 요인을 긁음의 직접적인 원인이라고 단정하지 마세요.
-                        한 번의 동시 발생만으로 자극 요인이라고 판단하지 마세요.
-                        데이터에 존재하지 않는 정보를 추측하거나 만들어내지 마세요.
-                        의학적 진단, 알레르기 진단 또는 질환 판단을 하지 마세요.
-                        데이터가 부족하면 "현재 기록만으로 뚜렷한 연관성을 판단하기 어렵습니다."라고 명시하세요.
-                        여러 후보를 억지로 나열하지 마세요.
-                        사용자가 이해하기 쉽도록 간결하게 설명하세요.
-                        
-                [분석 우선순위]
+                                따라서 reason에는 시스템 내부 구현이나 분석 과정에 관한 표현을
+                                절대 포함하지 마세요.
                 
-                                                            1. 최근 7일의 전체 생활 패턴을 먼저 살펴보세요.
-                                                               - 날씨 변화
-                                                               - 식단 변화
-                                                               - 샤워 횟수 변화
-                                                               - 보습 횟수 변화
-                                                               - 긁음 패턴 변화
+                                다음과 같은 표현은 사용하지 마세요:
+                                - "백엔드에서"
+                                - "백엔드 분석 결과"
+                                - "후보로 잡혔고"
+                                - "시스템에서"
+                                - "알고리즘에서"
+                                - "점수에 따라"
+                                - "AI가 분석한 결과"
+                                - "데이터베이스에서"
                 
-                                                            2. 긁음 횟수와 시간은 상태를 판단하는 하나의 지표로만 사용하세요.
-                                                               분석의 대부분을 긁음 숫자 설명에 사용하지 마세요.
+                                사용자에게 관찰된 생활 기록과 긁음 변화만 자연스럽게 설명하세요.
                 
-                                                            3. 생활 데이터 중 평소와 달라진 부분이 있는지 확인하세요.
+                                예:
+                                잘못된 표현:
+                                "백엔드에서 보습 기록 감소가 주요 후보로 잡혔고..."
                 
-                                                            4. 특정 음식, 날씨, 샤워, 보습 변화가 긁음 증가와 반복적으로 같이 나타났다면
-                                                               이를 '주목할 요인'으로 제시할 수 있습니다.
+                                올바른 표현:
+                                "최근 보습제 사용 횟수가 줄어든 기간에 긁음 횟수가 함께 증가하는 흐름이 관찰됐어요."
                 
-                                                            5. 반복적인 연관성이 없다면
-                                                               '뚜렷한 자극 요인은 확인되지 않았다'고 간단히 설명하고
-                                                               대신 오늘의 관리 포인트를 제안하세요.
+                                후보 선정과 순위 결정은 이미 백엔드에서 완료되었습니다.
                 
-                                                            6. 최근 7일의 모든 숫자를 사용자에게 나열하지 마세요.
-                                                               숫자는 판단 근거로 내부적으로 활용하고,
-                                                               실제 출력에는 꼭 필요한 숫자만 사용하세요.
+                                절대 새로운 후보를 추가하지 마세요.
+                                후보를 삭제하지 마세요.
+                                후보 순서를 변경하지 마세요.
+                                factor 이름과 type 값을 변경하지 마세요.
                 
-                                                            [출력 스타일]
+                                당신의 역할은 각 후보가 왜 선택되었는지
+                                제공된 최근 7일 데이터를 바탕으로 설명하는 것입니다.
                 
-                                                            의료 보고서처럼 딱딱하게 작성하지 마세요.
-                                                            모바일 건강 관리 앱의 일일 리포트처럼
-                                                            짧고 자연스럽고 이해하기 쉬운 문장으로 작성하세요.
+                                각 후보마다 reason을 한 문장으로 작성하세요.
                 
-                                                            사용자에게 불안감을 줄 수 있는 표현,
-                                                            질환 진단,
-                                                            특정 음식이나 환경을 직접적인 원인으로 단정하는 표현은 사용하지 마세요.
+                                FOOD 후보라면
+                                최근 7일 식단 기록과 날짜별 긁음 횟수를 함께 확인하세요.
                 
-                                                            [출력 형식]
+                                LIFESTYLE 후보라면
+                                생활 기록 변화와 날짜별 긁음 횟수를 함께 확인하세요.
                 
-                                                            오늘의 한줄 요약:
-                                                            [오늘 상태를 자연어로 1문장]
+                                ENVIRONMENT 후보가 향후 제공되는 경우
+                                실제 제공된 환경 수치만 사용하세요.
                 
-                                                            주목할 패턴:
-                                                            [식단 / 날씨 / 샤워 / 보습 / 긁음 중 가장 의미 있는 변화 1개]
+                                reason은 반드시 제공된 데이터에서 확인 가능한 사실만 사용하세요.
                 
-                                                            오늘의 관리 포인트:
-                                                            [사용자가 오늘 실천할 수 있는 행동 1개]
+                                예:
+                                "최근 4일 동안 초콜릿 섭취가 반복되었고,
+                                같은 기간 긁음 횟수도 증가하는 흐름이 함께 관찰됐어요."
                 
-                                                            필요한 경우에만:
-                                                            자극 요인 후보:
-                                                            [반복적인 연관성이 있을 경우에만 1개]
-                        
-        """.formatted(
+                                또는
+                
+                                "최근 보습제 사용 횟수가 3회에서 1회로 감소하는 동안
+                                긁음 횟수가 함께 증가했어요."
+                
+                                특정 요인이 긁음의 직접적인 원인이라고 단정하지 마세요.
+                
+                                후보가 존재하는 경우:
+                                - triggerFactor는 1순위 factor
+                                - triggerFactors에는 모든 후보를 전달받은 순서대로 반환
+                                - rank는 1부터 시작
+                                - type은 제공받은 값을 그대로 반환
+                                - factor는 제공받은 값을 그대로 반환
+                                - reason만 실제 데이터를 기반으로 생성
+                
+                                후보가 "후보 없음"인 경우:
+                                - triggerFactor는 null
+                                - triggerFactors는 빈 배열 []
+                                
+                                후보의 rank는 백엔드가 실제 최근 7일 데이터를 기반으로
+                                계산한 연관 점수(score)를 높은 순서대로 정렬하여 결정했습니다.
+                
+                                FOOD 후보의 점수는
+                                - 최근 7일 반복 등장 빈도
+                                - 해당 음식이 기록된 날의 긁음 증가 정도
+                
+                                를 함께 반영합니다.
+                
+                                LIFESTYLE 후보의 점수는
+                                - 최근 생활습관 변화 정도
+                                - 같은 기간 긁음 증가 정도
+                
+                                를 함께 반영합니다.
+                
+                                score가 높은 후보가 더 높은 rank를 가집니다.
+                
+                                이 rank와 score는 백엔드에서 계산된 값이므로
+                                절대 순서를 변경하지 마세요.
+                
+                                reason에는 score, rank 계산 방식, 후보 선정 과정 등
+                                내부 분석 절차를 절대 언급하지 마세요.
+                
+                                reason은 사용자가 기록한 정보에서 직접 관찰할 수 있는
+                                사실과 변화만 설명하세요.
+                
+                                문장은 "왜 이 요인이 후보가 되었는지"가 아니라
+                                "어떤 기록과 변화가 함께 관찰되었는지"를 설명하는 방식으로 작성하세요.
+                      
+
+                               [응답 형식]
+                
+                                 반드시 아래 JSON 구조로만 응답하세요.
+                
+                                 JSON 앞뒤에 설명을 추가하지 마세요.
+                                 코드 블록을 사용하지 마세요.
+                                 마크다운을 사용하지 마세요.
+                
+                                 후보가 존재하는 경우 예시:
+                
+                                 {
+                                   "summary": "오늘 상태 요약",
+                                   "pattern": "가장 의미 있는 패턴",
+                                   "carePoint": "오늘의 관리 포인트",
+                                   "triggerFactor": "초콜릿",
+                                   "triggerFactors": [
+                                     {
+                                       "rank": 1,
+                                       "type": "FOOD",
+                                       "factor": "초콜릿",
+                                       "reason": "최근 기록을 기반으로 생성한 설명"
+                                     },
+                                     {
+                                       "rank": 2,
+                                       "type": "LIFESTYLE",
+                                       "factor": "보습 기록 감소",
+                                       "reason": "최근 기록을 기반으로 생성한 설명"
+                                     }
+                                   ]
+                                 }
+                
+                                 후보가 없는 경우:
+                
+                                 {
+                                   "summary": "오늘 상태 요약",
+                                   "pattern": "가장 의미 있는 패턴",
+                                   "carePoint": "오늘의 관리 포인트",
+                                   "triggerFactor": null,
+                                   "triggerFactors": []
+                                 }
+                                 
+                                 reason은 카드 UI에 표시되므로
+                                 한 문장으로 작성하고 지나치게 길게 작성하지 마세요.
+                                 가능하면 70자 이내로 작성하세요
+                """.formatted(
                 scratchCount,
                 totalScratchSeconds,
                 hourlyScratch,
                 weeklyScratch,
                 meals,
                 weeklyMeals,
+                triggerCandidatesText,
                 dailyNotes,
-                temperature != null ? temperature + "℃" : "기록 없음",
-                humidity != null ? humidity + "%" : "기록 없음",
-                airQuality != null ? airQuality : "기록 없음"
+                temperature != null
+                        ? temperature + "℃"
+                        : "기록 없음",
+                humidity != null
+                        ? humidity + "%"
+                        : "기록 없음",
+                airQuality != null
+                        ? airQuality
+                        : "기록 없음"
         );
+
         ChatCompletionCreateParams params =
                 ChatCompletionCreateParams.builder()
                         .model(ChatModel.GPT_5_2)
                         .addUserMessage(prompt)
                         .build();
 
-        var response = openAIClient.chat()
+        var response = openAIClient
+                .chat()
                 .completions()
                 .create(params);
 
-        return response.choices()
+        String content = response
+                .choices()
                 .stream()
                 .findFirst()
                 .flatMap(choice -> choice.message().content())
-                .orElse("AI 분석 결과가 없습니다.");
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "AI 분석 결과가 없습니다."
+                        )
+                );
+
+        // 혹시 모델이 코드블록을 붙였을 때를 대비한 방어 처리
+        content = content
+                .replace("```json", "")
+                .replace("```", "")
+                .trim();
+
+        try {
+
+            return objectMapper.readValue(
+                    content,
+                    ReportAiAnalysisDto.class
+            );
+
+        } catch (Exception e) {
+
+            throw new IllegalStateException(
+                    "AI 분석 JSON 파싱에 실패했습니다. AI 응답: "
+                            + content,
+                    e
+            );
+        }
     }
 }
