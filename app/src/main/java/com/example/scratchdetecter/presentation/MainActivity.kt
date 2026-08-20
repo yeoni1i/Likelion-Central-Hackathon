@@ -46,6 +46,9 @@ import com.example.scratchdetecter.storage.PairingPreference
 import com.example.scratchdetecter.vibration.WatchVibrator
 import java.time.Instant
 import java.util.UUID
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -117,10 +120,12 @@ private fun WatchApp(
         }
 
 
-    val savedDeviceId =
-        remember {
+    var savedDeviceId by
+    remember {
+        mutableStateOf(
             pairingPreference.serverDeviceId()
-        }
+        )
+    }
 
 
     var screenState by
@@ -155,6 +160,137 @@ private fun WatchApp(
         mutableStateOf<Long?>(null)
     }
 
+    var serverDetectionActive by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+
+        Log.d(
+            "DETECTION_POLL",
+            "polling coroutine 시작"
+        )
+
+        while (true) {
+
+            try {
+
+                val deviceId =
+                    pairingPreference.serverDeviceId()
+
+                if (deviceId == null) {
+
+                    Log.d(
+                        "DETECTION_POLL",
+                        "deviceId 없음 - 대기"
+                    )
+
+                    delay(2000)
+                    continue
+                }
+
+                val response =
+                    RetrofitClient
+                        .deviceDetectionApi
+                        .getDetectionStatus(deviceId)
+
+                if (response.isSuccessful) {
+
+                    val status =
+                        response.body()?.status
+
+                    Log.d(
+                        "DETECTION_POLL",
+                        "서버 감지 상태 = $status"
+                    )
+
+                    when (status) {
+
+                        "START" -> {
+
+                            serverDetectionActive = true
+
+                            if (
+                                screenState != WatchScreenState.MONITORING &&
+                                screenState != WatchScreenState.WARNING &&
+                                screenState != WatchScreenState.FINISHED
+                            ) {
+
+                                Log.d(
+                                    "DETECTION_POLL",
+                                    "START 수신 → 감지 시작"
+                                )
+
+                                hasStartedMonitoring = false
+
+                                val batteryPercentage =
+                                    getBatteryPercentage(context)
+
+                                screenState =
+                                    if (
+                                        batteryPercentage in
+                                        0..LOW_BATTERY_PERCENT
+                                    ) {
+                                        WatchScreenState.BATTERY_LOW
+                                    } else {
+                                        WatchScreenState.MONITORING
+                                    }
+                            }
+                        }
+
+                        "STOP" -> {
+
+                            serverDetectionActive = false
+
+                            if (
+                                screenState == WatchScreenState.MONITORING ||
+                                screenState == WatchScreenState.WARNING ||
+                                screenState == WatchScreenState.FINISHED
+                            ) {
+
+                                Log.d(
+                                    "DETECTION_POLL",
+                                    "STOP 수신 → 감지 종료"
+                                )
+
+                                WatchVibrator.stop(context)
+                                warningStartedAt = null
+
+                                screenState =
+                                    WatchScreenState.HOME
+                            }
+                        }
+                    }
+
+                } else {
+
+                    Log.e(
+                        "DETECTION_POLL",
+                        "상태 조회 실패 HTTP=${response.code()}"
+                    )
+                }
+
+            } catch (e: CancellationException) {
+
+                Log.d(
+                    "DETECTION_POLL",
+                    "polling coroutine 종료"
+                )
+
+                throw e
+
+            } catch (e: Exception) {
+
+                Log.e(
+                    "DETECTION_POLL",
+                    "상태 polling 실패",
+                    e
+                )
+            }
+
+            delay(2000)
+        }
+    }
 
     /*
      * 워치의 뒤로가기 버튼을 눌렀을 때
@@ -589,11 +725,11 @@ private fun WatchApp(
                             deviceName ->
 
                         pairingPreference.savePairedDevice(
-                            serverDeviceId =
-                                serverDeviceId,
-                            deviceName =
-                                deviceName
+                            serverDeviceId = serverDeviceId,
+                            deviceName = deviceName
                         )
+
+                        savedDeviceId = serverDeviceId
 
                         screenState =
                             WatchScreenState.HOME
@@ -729,11 +865,14 @@ private fun WatchApp(
             WatchScreenState.FINISHED -> {
 
                 FinishedScreen(
-
                     onTimeout = {
 
                         screenState =
-                            WatchScreenState.MONITORING
+                            if (serverDetectionActive) {
+                                WatchScreenState.MONITORING
+                            } else {
+                                WatchScreenState.HOME
+                            }
                     }
                 )
             }
