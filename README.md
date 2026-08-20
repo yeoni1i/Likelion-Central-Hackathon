@@ -55,7 +55,7 @@
       <img width="1920" height="1080" alt="44" src="https://github.com/user-attachments/assets/2b5801e1-d575-447e-a737-43bb89c2f88f" />
     </td>
     <td align="center" width="50%">
-      <img width="1920" height="1080" alt="43" src="https://github.com/user-attachments/assets/8a84c636-2fa7-4022-89d3-0cde263f75de" />
+      <img width="1920" height="1080" alt="45" src="https://github.com/user-attachments/assets/1e85162f-2b01-4882-9f55-35e389b4256a" />
     </td>
   </tr>
 </table>
