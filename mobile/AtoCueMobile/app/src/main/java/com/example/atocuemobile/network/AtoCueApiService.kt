@@ -27,6 +27,7 @@ import retrofit2.http.Part
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
+import okhttp3.MultipartBody
 
 
 
@@ -123,6 +124,14 @@ interface AtoCueApiService {
         @Part("request") request: RequestBody
     ): DailyLogResponse
 
+    // 6-1. 일상데이터 (사진 포함) — 식단 기록에 이미지 첨부용
+    @Multipart
+    @POST("daily-logs")
+    suspend fun createDailyLogWithImage(
+        @Part("request") request: RequestBody,
+        @Part image: MultipartBody.Part
+    ): DailyLogResponse
+
     @GET("daily-logs")
     suspend fun getDailyLogs(
         @Query("date") date: String
@@ -160,4 +169,3 @@ interface AtoCueApiService {
         @Query("days") days: Int = 30
     ): Response<RiskFoodListResponse>
 }
-

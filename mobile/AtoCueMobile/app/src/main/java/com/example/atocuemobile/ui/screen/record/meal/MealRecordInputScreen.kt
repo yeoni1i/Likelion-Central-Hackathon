@@ -1,6 +1,6 @@
 package com.example.atocuemobile.ui.screen.record.meal
 
-import androidx.compose.foundation.Image
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.atocuemobile.R
 import com.example.atocuemobile.ui.screen.record.component.RecordDatePickerDialog
 import com.example.atocuemobile.ui.screen.timeline.AtoCueBlue
@@ -37,11 +38,16 @@ import com.example.atocuemobile.network.dto.DailyLogCreateRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
+import java.io.FileOutputStream
 
 
 @Composable
 fun MealRecordInputScreen(
+    capturedImageUri: Uri?,
     onBack: () -> Unit,
     onSubmitComplete: () -> Unit
 ) {
@@ -177,10 +183,23 @@ fun MealRecordInputScreen(
                                         "application/json".toMediaTypeOrNull()
                                     )
 
-                                    val response =
+                                    // 사진이 있으면 이미지 포함 API, 없으면 기존 API 호출
+                                    val response = if (capturedImageUri != null) {
+                                        val imagePart = uriToMultipart(
+                                            context = context,
+                                            uri = capturedImageUri,
+                                            partName = "image"
+                                        )
+
+                                        RetrofitClient.api.createDailyLogWithImage(
+                                            request = requestBody,
+                                            image = imagePart
+                                        )
+                                    } else {
                                         RetrofitClient.api.createDailyLog(
                                             request = requestBody
                                         )
+                                    }
 
                                     Log.d(
                                         "DAILY_LOG_TEST",
@@ -256,14 +275,25 @@ fun MealRecordInputScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background),
-                    contentDescription = "식단 사진",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(260.dp)
-                )
+                if (capturedImageUri != null) {
+                    AsyncImage(
+                        model = capturedImageUri,
+                        contentDescription = "식단 사진",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(260.dp)
+                    )
+                } else {
+                    androidx.compose.foundation.Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_background),
+                        contentDescription = "식단 사진",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(260.dp)
+                    )
+                }
             }
 
             item {
@@ -379,6 +409,28 @@ fun MealRecordInputScreen(
     }
 }
 
+/**
+ * Uri를 임시 파일로 복사한 뒤 Multipart.Part로 변환합니다.
+ * 서버 API의 @Part 이름이 "image"가 아니라면 partName을 맞춰서 호출하세요.
+ */
+private fun uriToMultipart(
+    context: android.content.Context,
+    uri: Uri,
+    partName: String
+): MultipartBody.Part {
+    val inputStream = context.contentResolver.openInputStream(uri)
+        ?: throw IllegalStateException("이미지를 읽을 수 없습니다.")
+
+    val tempFile = File.createTempFile("upload_", ".jpg", context.cacheDir)
+    FileOutputStream(tempFile).use { output ->
+        inputStream.copyTo(output)
+    }
+    inputStream.close()
+
+    val requestFile = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+    return MultipartBody.Part.createFormData(partName, tempFile.name, requestFile)
+}
+
 // 식사시간 선택 ModalBottomSheet
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -405,7 +457,6 @@ private fun MealTimeBottomSheet(
                 .padding(vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 헤더
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -433,7 +484,6 @@ private fun MealTimeBottomSheet(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 옵션 목록
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -474,7 +524,6 @@ private fun MealTimeBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 바텀시트 하단 [확인] 버튼 (라운딩 8.dp)
             Button(
                 onClick = {
                     onMealTimeSelected(tempSelectedTime)

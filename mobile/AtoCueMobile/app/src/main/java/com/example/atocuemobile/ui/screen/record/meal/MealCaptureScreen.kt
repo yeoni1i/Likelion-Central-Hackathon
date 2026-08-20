@@ -1,9 +1,19 @@
 package com.example.atocuemobile.ui.screen.record.meal
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -11,51 +21,134 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.atocuemobile.R
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import coil.compose.AsyncImage
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.Executors
 
 @Composable
 fun MealCaptureScreen(
-    onCapturedComplete: () -> Unit,
+    onCapturedComplete: (Uri) -> Unit,   // ✅ Uri 실어서 넘김
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
+                    PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted -> hasCameraPermission = granted }
+
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     var isCaptured by remember { mutableStateOf(false) }
-    // 🌟 인포 박스 표시 여부 상태 (기본값: false - 숨김 처리)
+    var capturedUri by remember { mutableStateOf<Uri?>(null) }
     var showInfoBox by remember { mutableStateOf(false) }
+    var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
+
+    val imageCapture = remember { ImageCapture.Builder().build() }
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF1E1E1E))
     ) {
-        // 1. 카메라 프리뷰 박스 (사진 영역)
+        // 1. 카메라 프리뷰 / 촬영된 사진 영역
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.78f)
                 .align(Alignment.TopCenter)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
-                contentDescription = "식단 촬영 프리뷰",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            when {
+                isCaptured && capturedUri != null -> {
+                    AsyncImage(
+                        model = capturedUri,
+                        contentDescription = "촬영된 식단 사진",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                hasCameraPermission -> {
+                    key(lensFacing) {   // ✅ lensFacing 바뀌면 프리뷰 새로 바인딩
+                        AndroidView(
+                            modifier = Modifier.fillMaxSize(),
+                            factory = { ctx ->
+                                val previewView = PreviewView(ctx)
+                                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
 
-            // 🌟 안내 가이드 박스: showInfoBox가 true이고 아직 촬영 전(!isCaptured)일 때만 표시
+                                cameraProviderFuture.addListener({
+                                    val cameraProvider = cameraProviderFuture.get()
+
+                                    val preview = Preview.Builder().build().also {
+                                        it.setSurfaceProvider(previewView.surfaceProvider)
+                                    }
+
+                                    val cameraSelector = CameraSelector.Builder()
+                                        .requireLensFacing(lensFacing)
+                                        .build()
+
+                                    try {
+                                        cameraProvider.unbindAll()
+                                        cameraProvider.bindToLifecycle(
+                                            lifecycleOwner,
+                                            cameraSelector,
+                                            preview,
+                                            imageCapture
+                                        )
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }, ContextCompat.getMainExecutor(ctx))
+
+                                previewView
+                            }
+                        )
+                    }
+                }
+                else -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "카메라 권한이 필요해요",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+
             AnimatedVisibility(
                 visible = showInfoBox && !isCaptured,
                 enter = fadeIn(),
@@ -66,7 +159,7 @@ fun MealCaptureScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .background(Color(0x99000000), RoundedCornerShape(12.dp)) // 투명 검은색 배경
+                        .background(Color(0x99000000), RoundedCornerShape(12.dp))
                         .padding(horizontal = 24.dp, vertical = 14.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -88,7 +181,7 @@ fun MealCaptureScreen(
             }
         }
 
-        // 2. 상단 바 (뒤로가기/닫기, 정보 아이콘)
+        // 2. 상단 바
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,24 +191,31 @@ fun MealCaptureScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
+            IconButton(onClick = {
+                if (isCaptured) {
+                    // 재촬영: 프리뷰로 복귀
+                    isCaptured = false
+                    capturedUri = null
+                } else {
+                    onBack()
+                }
+            }) {
                 Icon(
                     imageVector = if (isCaptured) Icons.Default.ArrowBack else Icons.Default.Close,
                     contentDescription = "닫기",
                     tint = Color.White
                 )
             }
-            // 🌟 인포 아이콘 클릭 시 showInfoBox 토글 (켜기/끄기)
             IconButton(onClick = { showInfoBox = !showInfoBox }) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = "정보",
-                    tint = if (showInfoBox) Color(0xFF4A90E2) else Color.White // 활성화 상태일 때 색상 강조
+                    tint = if (showInfoBox) Color(0xFF4A90E2) else Color.White
                 )
             }
         }
 
-        // 3. 하단 컨트롤 영역 (보내주신 코드 스타일 100% 유지)
+        // 3. 하단 컨트롤 영역
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -125,7 +225,6 @@ fun MealCaptureScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 좌측 갤러리 프리뷰 썸네일 박스
             Box(
                 modifier = Modifier
                     .size(52.dp)
@@ -134,7 +233,6 @@ fun MealCaptureScreen(
             )
 
             if (!isCaptured) {
-                // 중앙 파란색 촬영 버튼 (카메라 아이콘 + 원형 테두리 감싸기)
                 Box(
                     modifier = Modifier
                         .size(72.dp)
@@ -142,7 +240,32 @@ fun MealCaptureScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isCaptured = true },
+                        onClick = {
+                            if (!hasCameraPermission) return@IconButton
+
+                            val photoFile = createImageFile(context)
+                            val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+                            imageCapture.takePicture(
+                                outputOptions,
+                                cameraExecutor,
+                                object : ImageCapture.OnImageSavedCallback {
+                                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                                        val savedUri = FileProvider.getUriForFile(
+                                            context,
+                                            "${context.packageName}.fileprovider",
+                                            photoFile
+                                        )
+                                        capturedUri = savedUri
+                                        isCaptured = true
+                                    }
+
+                                    override fun onError(exception: ImageCaptureException) {
+                                        exception.printStackTrace()
+                                    }
+                                }
+                            )
+                        },
                         modifier = Modifier
                             .size(58.dp)
                             .background(Color(0xFF4A90E2), CircleShape)
@@ -156,16 +279,22 @@ fun MealCaptureScreen(
                     }
                 }
 
-                // 우측 다시 찍기 버튼 (네모 형태 배경)
+                // 기존 "재촬영" 버튼 → 전/후면 카메라 전환으로 용도 변경
                 IconButton(
-                    onClick = {},
+                    onClick = {
+                        lensFacing =
+                            if (lensFacing == CameraSelector.LENS_FACING_BACK)
+                                CameraSelector.LENS_FACING_FRONT
+                            else
+                                CameraSelector.LENS_FACING_BACK
+                    },
                     modifier = Modifier
                         .size(52.dp)
                         .background(Color(0xFF333333), RoundedCornerShape(12.dp))
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "재촬영",
+                        imageVector = Icons.Default.Cameraswitch,
+                        contentDescription = "카메라 전환",
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
@@ -176,7 +305,9 @@ fun MealCaptureScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Button(
-                        onClick = onCapturedComplete,
+                        onClick = {
+                            capturedUri?.let { onCapturedComplete(it) }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A4A4A)),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.height(44.dp)
@@ -187,4 +318,10 @@ fun MealCaptureScreen(
             }
         }
     }
+}
+
+private fun createImageFile(context: android.content.Context): File {
+    val imagesDir = File(context.cacheDir, "images").apply { mkdirs() }
+    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+    return File(imagesDir, "MEAL_${timestamp}.jpg")
 }
