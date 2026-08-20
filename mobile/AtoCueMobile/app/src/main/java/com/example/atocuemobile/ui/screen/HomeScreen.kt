@@ -161,13 +161,13 @@ fun HomeScreen(
     val humidityText = weatherData?.let { "${it.humidity}%" } ?: "--%"
     val airQualityText = weatherData?.airQuality ?: "--"
 
-    val fineDustIconRes = when (airQualityText) {
-        "매우 좋음", "매우좋음" -> R.drawable.one
-        "좋음" -> R.drawable.two
-        "보통" -> R.drawable.three
-        "나쁨" -> R.drawable.four
-        "매우 나쁨", "매우나쁨" -> R.drawable.five
-        else -> R.drawable.one
+    // 💡 미세먼지 상태에 따라 verygood, good, normal, bad, verybad 표정 아이콘 리소스 연결
+    val fineDustIconRes = when (airQualityText.trim()) {
+        "좋음", "매우 좋음", "매우좋음" -> R.drawable.verygood
+        "보통" -> R.drawable.good
+        "나쁨" -> R.drawable.bad
+        "매우 나쁨", "매우나쁨" -> R.drawable.verybad
+        else -> R.drawable.verygood
     }
 
     val pagerState = rememberPagerState(pageCount = { guideList.size })
@@ -719,7 +719,7 @@ fun HomeScreen(
                                 modifier = Modifier.weight(1f),
                                 title = airQualityText,
                                 subtitle = "미세먼지",
-                                iconRes = fineDustIconRes,
+                                iconRes = fineDustIconRes, // 💡 표정 아이콘 적용 완료
                                 iconSize = 26.dp
                             )
                         }

@@ -64,25 +64,18 @@ fun MealRecordTab(
             )
 
         } catch (e: CancellationException) {
-            // Compose가 LaunchedEffect를 정상적으로 취소한 경우
-            // 실패로 처리하면 안 됨
             throw e
-
         } catch (e: Exception) {
-
             Log.e(
                 "DAILY_LOG_TEST",
                 "식단 조회 실제 실패 date=$date",
                 e
             )
-
             dailyLogs = emptyList()
-
         } finally {
             isLoading = false
         }
     }
-
 
     // 식단으로 등록된 daily_log만 추출
     val mealLogs = dailyLogs.filter {
@@ -95,7 +88,11 @@ fun MealRecordTab(
             log.mealType == type.name
         }
 
+        // 해당 식사 타입에 매칭되는 첫 번째 로그의 ID를 가져오거나, 없으면 기본값 0L 부여
+        val firstLog = matchedLogs.firstOrNull()
+
         MealRecord(
+            id = firstLog?.id ?: 0L, // 💡 서버에서 받아온 로그의 실제 ID를 넘겨줍니다!
             date = date,
             mealType = type,
 

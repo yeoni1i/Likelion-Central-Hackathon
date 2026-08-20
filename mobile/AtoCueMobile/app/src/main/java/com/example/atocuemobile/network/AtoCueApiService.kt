@@ -176,4 +176,13 @@ interface AtoCueApiService {
         @Part("request") request: RequestBody,
         @Part image: MultipartBody.Part? = null
     ): DailyLogResponse
+
+    // 🌟 식단 기록 수정 화면용 (이미지 수정 포함 갱신)
+    @Multipart
+    @PUT("daily-logs/{id}")
+    suspend fun updateDailyLog(
+        @Path("id") id: Long,
+        @Part("request") request: RequestBody,
+        @Part image: MultipartBody.Part? = null
+    ): DailyLogResponse
 }
