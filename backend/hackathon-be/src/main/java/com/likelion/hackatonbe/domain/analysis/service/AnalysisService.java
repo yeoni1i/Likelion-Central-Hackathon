@@ -611,12 +611,14 @@ public class AnalysisService {
 
         if (weeklyLogs == null
                 || weeklyLogs.isEmpty()
-                || weeklyAnalysis == null) {
+                || weeklyAnalysis == null
+                || weeklyAnalysis.daily() == null
+                || weeklyAnalysis.daily().isEmpty()) {
 
             return null;
         }
 
-        // 날짜 → 해당 날짜 긁음 횟수
+        // 날짜 → 긁음 횟수
         var scratchByDate =
                 weeklyAnalysis.daily()
                         .stream()
@@ -626,14 +628,16 @@ public class AnalysisService {
                         ));
 
         /*
-         * 음식별로:
-         * 어떤 날짜에 등장했고,
-         * 그 날짜에 몇 번 긁었는지 저장
+         * 음식군 → 등장 날짜
+         *
+         * 예:
+         * 코코아 시리얼 -> 초콜릿/코코아
+         * 초코우유     -> 초콜릿/코코아
          */
-        var foodScratchStats =
+        var foodDates =
                 new java.util.HashMap<
                         String,
-                        java.util.List<Long>
+                        java.util.Set<LocalDate>
                         >();
 
         for (DailyLog log : weeklyLogs) {
@@ -643,93 +647,102 @@ public class AnalysisService {
                 continue;
             }
 
-            long scratchCount =
-                    scratchByDate.getOrDefault(
-                            log.getDate(),
-                            0L
-                    );
+            for (String rawFood : log.getFoods()) {
 
-            // 같은 날짜에 같은 음식이 중복 저장돼도 1회만 계산
-            log.getFoods()
-                    .stream()
-                    .distinct()
-                    .forEach(food ->
-                            foodScratchStats
-                                    .computeIfAbsent(
-                                            food,
-                                            key -> new java.util.ArrayList<>()
-                                    )
-                                    .add(scratchCount)
-                    );
+                String food = normalizeFoodTrigger(rawFood);
+
+                if (food == null || food.isBlank()) {
+                    continue;
+                }
+
+                foodDates
+                        .computeIfAbsent(
+                                food,
+                                key -> new java.util.HashSet<>()
+                        )
+                        .add(log.getDate());
+            }
         }
-
-        double weeklyAverage =
-                weeklyAnalysis.dailyAverage();
-
-        int totalDays =
-                weeklyAnalysis.daily().size();
 
         ScoredTriggerCandidate bestCandidate = null;
 
-        for (var entry : foodScratchStats.entrySet()) {
+        for (var entry : foodDates.entrySet()) {
 
             String food = entry.getKey();
-            List<Long> scratchCounts = entry.getValue();
+            java.util.Set<LocalDate> exposedDates =
+                    entry.getValue();
 
-            int appearedDays =
-                    scratchCounts.size();
+            int appearedDays = exposedDates.size();
 
-            // 최소 3일 이상 반복되어야 후보 인정
-            if (appearedDays < 3) {
+            /*
+             * 최소 2일 이상 반복 노출된 음식군만 사용
+             */
+            if (appearedDays < 2) {
                 continue;
             }
 
-            double averageScratchOnFoodDays =
-                    scratchCounts
+            /*
+             * 해당 음식을 먹은 날의 긁음
+             */
+            double exposedAverage =
+                    weeklyAnalysis.daily()
                             .stream()
-                            .mapToLong(Long::longValue)
+                            .filter(item ->
+                                    exposedDates.contains(item.date())
+                            )
+                            .mapToLong(item -> item.count())
                             .average()
                             .orElse(0.0);
 
-            // 음식 등장일 긁음 평균이 전체 평균보다 높지 않으면 제외
-            if (averageScratchOnFoodDays <= weeklyAverage) {
+            /*
+             * 해당 음식을 먹지 않은 날의 긁음
+             */
+            double nonExposedAverage =
+                    weeklyAnalysis.daily()
+                            .stream()
+                            .filter(item ->
+                                    !exposedDates.contains(item.date())
+                            )
+                            .mapToLong(item -> item.count())
+                            .average()
+                            .orElse(0.0);
+
+            /*
+             * 모든 날 등장한 음식은 비교군이 없으므로 제외
+             *
+             * 예: 매일 쌀밥을 먹었다면
+             * 쌀밥 때문인지 판단할 수 없음
+             */
+            if (appearedDays >= weeklyAnalysis.daily().size()) {
                 continue;
             }
 
             /*
-             * ① 반복 등장 빈도 점수
-             *
-             * 7일 내 7일 등장 → 1.0
-             * 7일 내 4일 등장 → 약 0.57
+             * 먹은 날 긁음이 더 많지 않다면 후보 제외
              */
-            double frequencyScore =
-                    totalDays > 0
-                            ? (double) appearedDays / totalDays
-                            : 0.0;
+            if (exposedAverage <= nonExposedAverage) {
+                continue;
+            }
 
             /*
-             * ② 해당 음식 등장일의 긁음 증가 정도
-             *
-             * 예)
-             * 주간 평균 = 4
-             * 음식 등장일 평균 = 6
-             *
-             * 증가율 = (6 - 4) / 4 = 0.5
+             * 노출일 vs 비노출일 증가 정도
              */
             double scratchIncreaseScore;
 
-            if (weeklyAverage > 0) {
+            if (nonExposedAverage > 0) {
+
                 scratchIncreaseScore =
-                        (averageScratchOnFoodDays - weeklyAverage)
-                                / weeklyAverage;
+                        (exposedAverage - nonExposedAverage)
+                                / nonExposedAverage;
+
             } else {
+
                 scratchIncreaseScore =
-                        averageScratchOnFoodDays > 0
+                        exposedAverage > 0
                                 ? 1.0
                                 : 0.0;
             }
 
-            // 특정 값이 지나치게 점수를 압도하지 않도록 0~1 범위 제한
             scratchIncreaseScore =
                     Math.max(
                             0.0,
@@ -740,19 +753,47 @@ public class AnalysisService {
                     );
 
             /*
+             * 반복성
+             *
+             * 2일 등장 → 기본 신뢰도
+             * 3일 이상 → 조금 더 높은 신뢰도
+             *
+             * 하지만 단순 빈도가 점수를 지배하지 않게 함
+             */
+            double repetitionScore =
+                    Math.min(
+                            1.0,
+                            appearedDays / 3.0
+                    );
+
+            /*
              * 최종 점수
              *
-             * 반복 빈도 50%
-             * 긁음 증가 정도 50%
-             *
-             * 결과 범위: 0 ~ 100
+             * 긁음 증가 연관성 80%
+             * 반복성 20%
              */
             double score =
-                    (frequencyScore * 50.0)
-                            + (scratchIncreaseScore * 50.0);
+                    (scratchIncreaseScore * 80.0)
+                            + (repetitionScore * 20.0);
 
             score =
                     Math.round(score * 10.0) / 10.0;
+
+
+            System.out.println(
+                    "[FOOD SCORE] "
+                            + food
+                            + " | 등장="
+                            + appearedDays
+                            + "일"
+                            + " | 섭취일 평균="
+                            + exposedAverage
+                            + " | 비섭취일 평균="
+                            + nonExposedAverage
+                            + " | score="
+                            + score
+            );
+
 
             ScoredTriggerCandidate candidate =
                     new ScoredTriggerCandidate(
@@ -769,6 +810,28 @@ public class AnalysisService {
         }
 
         return bestCandidate;
+    }
+
+
+    private String normalizeFoodTrigger(String food) {
+
+        if (food == null) {
+            return null;
+        }
+
+        String normalized = food.trim();
+
+        /*
+         * 초콜릿 / 코코아 계열
+         */
+        if (normalized.contains("초코")
+                || normalized.contains("초콜릿")
+                || normalized.contains("코코아")) {
+
+            return "초콜릿/코코아";
+        }
+
+        return normalized;
     }
 
     //생활요인 추측 계산 로직
