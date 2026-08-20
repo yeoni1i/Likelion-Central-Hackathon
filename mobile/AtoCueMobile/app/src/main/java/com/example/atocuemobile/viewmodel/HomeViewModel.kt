@@ -45,7 +45,8 @@ data class HomeUiState(
 class HomeViewModel(
     val userId: Long,
     private val childId: Long,
-    initialDeviceConnected: Boolean = false
+    initialDeviceConnected: Boolean = false,
+    initialDeviceId: Long? = null
 ) : ViewModel() {
 
     private var pairingPollingJob: Job? = null
@@ -53,7 +54,8 @@ class HomeViewModel(
 
     private val _uiState = MutableStateFlow(
         HomeUiState(
-            isDeviceConnected = initialDeviceConnected,
+            isDeviceConnected = initialDeviceConnected || initialDeviceId != null,
+            deviceId = initialDeviceId,
             guideList = generateWeatherGuides(null)
         )
     )

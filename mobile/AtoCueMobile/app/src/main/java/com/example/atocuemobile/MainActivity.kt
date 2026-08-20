@@ -88,6 +88,31 @@ private object OnboardingPrefs {
     }
 }
 
+
+private object WatchDevicePrefs {
+    private const val PREFS_NAME = "atocue_watch_device_prefs"
+
+    private fun prefs(context: Context) =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    fun getDeviceId(context: Context, childId: Long): Long? {
+        val value = prefs(context).getLong("device_id_child_$childId", -1L)
+        return if (value == -1L) null else value
+    }
+
+    fun setDeviceId(context: Context, childId: Long, deviceId: Long) {
+        prefs(context).edit {
+            putLong("device_id_child_$childId", deviceId)
+        }
+    }
+
+    fun clearDeviceId(context: Context, childId: Long) {
+        prefs(context).edit {
+            remove("device_id_child_$childId")
+        }
+    }
+}
+
 private enum class AppScreen {
     LOGIN,
     SIGN_UP,
@@ -112,6 +137,7 @@ private fun AppRoot() {
     var loggedInUserId by remember { mutableStateOf<Long?>(null) }
     var authToken by remember { mutableStateOf<String?>(null) }
     var savedChildId by remember { mutableStateOf<Long?>(null) }
+    var savedDeviceId by remember { mutableStateOf<Long?>(null) }
 
     var connectWatchScreenTitle by remember { mutableStateOf("워치 연결") }
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -127,7 +153,8 @@ private fun AppRoot() {
                 HomeViewModel(
                     userId = loggedInUserId!!,
                     childId = effectiveChildId,
-                    initialDeviceConnected = false
+                    initialDeviceConnected = savedDeviceId != null,
+                    initialDeviceId = savedDeviceId
                 )
             }
         } else {
@@ -148,6 +175,24 @@ private fun AppRoot() {
                 } else if (childId != null) {
                     savedChildId = childId
                     OnboardingPrefs.setCompleted(context, userId, childId)
+
+                    // 기존에 한 번 연결했던 워치 deviceId를 로컬에서 복원
+                    // 현재 데모 계정(user 7 / child 6)은 이전 버전에서 deviceId를 저장하지 않았으므로
+                    // 최초 1회에 한해 기존 DB 워치(id=1)를 fallback으로 사용한다.
+                    val restoredDeviceId =
+                        WatchDevicePrefs.getDeviceId(context, childId)
+                            ?: if (userId == 7L && childId == 6L) 1L else null
+
+                    savedDeviceId = restoredDeviceId
+
+                    if (restoredDeviceId != null) {
+                        WatchDevicePrefs.setDeviceId(
+                            context = context,
+                            childId = childId,
+                            deviceId = restoredDeviceId
+                        )
+                    }
+
                     currentScreen = AppScreen.MAIN
                 } else {
                     savedChildId = null
@@ -208,6 +253,7 @@ private fun AppRoot() {
 
                         if (userId != null && childId != null) {
                             savedChildId = childId
+                            savedDeviceId = null
                             OnboardingPrefs.setCompleted(context, userId, childId)
                         }
                         currentScreen = AppScreen.ONBOARDING_COMPLETE
@@ -247,8 +293,8 @@ private fun AppRoot() {
                     },
 
                     onNavigateToDeviceManage = {
+                        // 이미 연결된 기기를 관리할 때는 새 페어링 코드를 발급하지 않는다.
                         connectWatchScreenTitle = "기기 관리"
-                        vm.fetchPairingCode()
                         currentScreen = AppScreen.CONNECT_WATCH
                     },
 
@@ -266,9 +312,12 @@ private fun AppRoot() {
                     },
 
                     onLogout = {
+                        // 로그아웃해도 워치 연결 정보는 유지한다.
+                        // 다음 로그인 시 childId 기준으로 기존 deviceId를 복원한다.
                         loggedInUserId = null
                         authToken = null
                         savedChildId = null
+                        savedDeviceId = null
                         RetrofitClient.accessToken = null
                         currentScreen = AppScreen.LOGIN
                     }
@@ -284,8 +333,20 @@ private fun AppRoot() {
             } else {
                 val uiState by vm.uiState.collectAsState()
 
-                LaunchedEffect(uiState.isDeviceConnected) {
+                LaunchedEffect(uiState.isDeviceConnected, uiState.deviceId) {
                     if (uiState.isDeviceConnected) {
+                        val childId = effectiveChildId
+                        val deviceId = uiState.deviceId
+
+                        if (childId != null && deviceId != null) {
+                            savedDeviceId = deviceId
+                            WatchDevicePrefs.setDeviceId(
+                                context = context,
+                                childId = childId,
+                                deviceId = deviceId
+                            )
+                        }
+
                         currentScreen = AppScreen.MAIN
                     }
                 }
@@ -295,7 +356,13 @@ private fun AppRoot() {
                     title = connectWatchScreenTitle,
                     code = uiState.pairingCode,
                     isLoading = uiState.isLoading,
-                    onRefreshCode = { vm.fetchPairingCode() },
+                    onRefreshCode = {
+                        // "워치 연결" 화면에서만 새 페어링 코드를 발급한다.
+                        // "기기 관리"에서는 기존 연결을 유지한다.
+                        if (connectWatchScreenTitle == "워치 연결") {
+                            vm.fetchPairingCode()
+                        }
+                    },
                     onBackClick = { currentScreen = AppScreen.MAIN }
                 )
             }

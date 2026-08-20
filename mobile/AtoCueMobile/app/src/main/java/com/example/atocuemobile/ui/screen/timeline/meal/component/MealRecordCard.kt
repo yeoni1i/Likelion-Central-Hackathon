@@ -25,38 +25,85 @@ fun MealRecordCard(
     record: MealRecord,
     onClick: () -> Unit
 ) {
+
+    val hasRecord =
+        !record.photoUrl.isNullOrBlank() ||
+                record.menuItems.isNotEmpty()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1f) // 1:1 정사각형 비율 유지
+            .aspectRatio(1f)
             .clip(RoundedCornerShape(10.15.dp))
             .background(Color(0xFFFAFAFA))
-            .border(1.dp, color = Color(0xFFEBEBEB), shape = RoundedCornerShape(10.15.dp))
-            .clickable { onClick() } // 카드를 누르면 입력/수정 화면으로 이동
+            .border(
+                1.dp,
+                color = Color(0xFFEBEBEB),
+                shape = RoundedCornerShape(10.15.dp)
+            )
+            .clickable { onClick() }
     ) {
-        // 1. 등록된 사진이 있는 경우: 카드 전체에 사진을 꽉 채워 렌더링
-        if (!record.photoUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = record.photoUrl,
-                contentDescription = "식단 사진",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            // 2. 등록된 사진이 없을 때 "아직 등록된 기록이 없습니다" 텍스트 표시
-            Text(
-                text = "아직 등록된\n기록이 없습니다",
-                fontSize = 13.sp,
-                color = Color(0xFF6C6E72),
-                fontWeight = FontWeight(500),
-                textAlign = TextAlign.Start,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 16.dp, top = 19.dp)
-            )
+
+        when {
+            !record.photoUrl.isNullOrBlank() -> {
+
+                AsyncImage(
+                    model = record.photoUrl,
+                    contentDescription = "식단 사진",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            record.menuItems.isNotEmpty() -> {
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 16.dp
+                        )
+                ) {
+
+                    record.menuItems
+                        .take(4)
+                        .forEach { food ->
+
+                            Text(
+                                text = food,
+                                fontSize = 13.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1
+                            )
+
+                            Spacer(
+                                modifier = Modifier.height(4.dp)
+                            )
+                        }
+                }
+            }
+
+            else -> {
+
+                Text(
+                    text = "아직 등록된\n기록이 없습니다",
+                    fontSize = 13.sp,
+                    color = Color(0xFF6C6E72),
+                    fontWeight = FontWeight(500),
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(
+                            start = 16.dp,
+                            top = 19.dp
+                        )
+                )
+            }
         }
 
-        // 3. 우측 하단 MealType 뱃지 (아침식사, 점심식사, 저녁식사, 간식) - 항상 유지!
         Text(
             text = record.mealType.label,
             fontSize = 12.sp,
@@ -64,12 +111,18 @@ fun MealRecordCard(
             color = Color(0xFF2367CE),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 12.dp, end = 12.dp)
+                .padding(
+                    bottom = 12.dp,
+                    end = 12.dp
+                )
                 .background(
                     color = AtoCueBlue.copy(alpha = 0.35f),
                     shape = RoundedCornerShape(5.dp)
                 )
-                .padding(horizontal = 10.dp, vertical = 6.dp)
+                .padding(
+                    horizontal = 10.dp,
+                    vertical = 6.dp
+                )
         )
     }
 }

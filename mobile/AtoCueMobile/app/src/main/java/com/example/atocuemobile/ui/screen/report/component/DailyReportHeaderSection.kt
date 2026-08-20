@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.atocuemobile.network.dto.TriggerFactorDto
+import androidx.compose.ui.unit.em
 
 val AtoCueBlue = Color(0xFF3B82F6)
 
@@ -228,9 +229,9 @@ private fun TriggerFactorCard(
 
             Text(
                 text = trigger.reason,
-                fontSize = 12.sp,
+                fontSize = 14.sp,
                 color = Color(0xFF84878E),
-                lineHeight = 18.sp,
+                lineHeight = 1.5.em,
                 style = tightTextStyle,
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis

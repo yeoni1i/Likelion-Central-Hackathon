@@ -162,12 +162,12 @@ fun HomeScreen(
     val airQualityText = weatherData?.airQuality ?: "--"
 
     val fineDustIconRes = when (airQualityText) {
-        "매우 좋음", "매우좋음" -> R.drawable.verygood
-        "좋음" -> R.drawable.good
-        "보통" -> R.drawable.normal
-        "나쁨" -> R.drawable.bad
-        "매우 나쁨", "매우나쁨" -> R.drawable.verybad
-        else -> R.drawable.verygood
+        "매우 좋음", "매우좋음" -> R.drawable.one
+        "좋음" -> R.drawable.two
+        "보통" -> R.drawable.three
+        "나쁨" -> R.drawable.four
+        "매우 나쁨", "매우나쁨" -> R.drawable.five
+        else -> R.drawable.one
     }
 
     val pagerState = rememberPagerState(pageCount = { guideList.size })
@@ -832,7 +832,7 @@ fun HomeScreen(
                                         TimelineCard(
                                             status = item.status.badgeLabel,
                                             statusColor = item.status.badgeTextColor,
-                                            iconRes = item.status.cloudImageRes,
+                                            iconRes = item.status.timelineImageRes,
                                             timeRange = item.timeRangeLabel,
                                             duration = item.durationLabel
                                         )

@@ -16,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.util.Log
@@ -27,6 +26,7 @@ import com.example.atocuemobile.ui.screen.timeline.model.MealRecord
 import com.example.atocuemobile.ui.screen.timeline.model.MealType
 import java.time.LocalDate
 import androidx.compose.ui.draw.clip
+import kotlinx.coroutines.CancellationException
 
 @Composable
 fun MealRecordTab(
@@ -47,20 +47,32 @@ fun MealRecordTab(
         try {
             isLoading = true
 
-            dailyLogs = RetrofitClient.api.getDailyLogs(
+            Log.d(
+                "DAILY_LOG_TEST",
+                "조회 시작 date=$date"
+            )
+
+            val response = RetrofitClient.api.getDailyLogs(
                 date = date.toString()
             )
 
+            dailyLogs = response
+
             Log.d(
                 "DAILY_LOG_TEST",
-                "식단 조회 성공 date=$date logs=$dailyLogs"
+                "식단 조회 성공 date=$date logs=$response"
             )
+
+        } catch (e: CancellationException) {
+            // Compose가 LaunchedEffect를 정상적으로 취소한 경우
+            // 실패로 처리하면 안 됨
+            throw e
 
         } catch (e: Exception) {
 
             Log.e(
                 "DAILY_LOG_TEST",
-                "식단 조회 실패 date=$date",
+                "식단 조회 실제 실패 date=$date",
                 e
             )
 
@@ -107,11 +119,12 @@ fun MealRecordTab(
             MealRecordCard(
                 record = record,
                 onClick = {
-                    if (!record.photoUrl.isNullOrBlank()) {
-                        // 이미 등록된 기록이 있으면 상세보기로 이동
+                    if (
+                        !record.photoUrl.isNullOrBlank() ||
+                        record.menuItems.isNotEmpty()
+                    ) {
                         onRecordClick(record)
                     } else {
-                        // 비어있으면 새로 등록(카메라)으로 이동
                         onAddRecordClick()
                     }
                 }

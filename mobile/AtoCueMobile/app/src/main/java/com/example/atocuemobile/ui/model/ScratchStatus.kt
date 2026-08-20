@@ -8,7 +8,8 @@ enum class ScratchStatus(
     val badgeLabel: String,
     val badgeBgColor: Color,
     val badgeTextColor: Color,
-    val cloudImageRes: Int
+    val cloudImageRes: Int,
+    val timelineImageRes: Int
 ) {
     // 1단계: 안정
     STABLE(
@@ -16,7 +17,8 @@ enum class ScratchStatus(
         badgeLabel = "안정",
         badgeBgColor = Color(0x2600CF90), // rgba(0, 207, 144, 0.15)
         badgeTextColor = Color(0xFF01B67F),
-        cloudImageRes = R.drawable.one
+        cloudImageRes = R.drawable.one,
+        timelineImageRes = R.drawable.verygood
     ),
 
     // 2단계: 보통
@@ -25,7 +27,8 @@ enum class ScratchStatus(
         badgeLabel = "보통",
         badgeBgColor = Color(0x265398FF), // rgba(83, 152, 255, 0.15)
         badgeTextColor = Color(0xFF5398FF),
-        cloudImageRes = R.drawable.two
+        cloudImageRes = R.drawable.two,
+        timelineImageRes = R.drawable.good
     ),
 
     // 3단계: 경고
@@ -34,7 +37,8 @@ enum class ScratchStatus(
         badgeLabel = "경고",
         badgeBgColor = Color(0x33FFC529), // #FFC52933
         badgeTextColor = Color(0xFFFFBC00),
-        cloudImageRes = R.drawable.three
+        cloudImageRes = R.drawable.three,
+        timelineImageRes = R.drawable.normal
     ),
 
     // 4단계: 위험
@@ -43,7 +47,8 @@ enum class ScratchStatus(
         badgeLabel = "위험",
         badgeBgColor = Color(0x26FF6831), // #FF683126
         badgeTextColor = Color(0xFFF8703E),
-        cloudImageRes = R.drawable.four
+        cloudImageRes = R.drawable.four,
+        timelineImageRes = R.drawable.bad
     ),
 
     // 5단계: 매우위험
@@ -52,11 +57,12 @@ enum class ScratchStatus(
         badgeLabel = "매우 위험",
         badgeBgColor = Color(0x33EE4444), // #EE444433
         badgeTextColor = Color(0xFFEE4444),
-        cloudImageRes = R.drawable.five
+        cloudImageRes = R.drawable.five,
+        timelineImageRes = R.drawable.verybad
     );
 
     companion object {
-        // Int, String, Double, Any 모두 안전하게 변환
+
         fun fromIntensity(intensity: Any?): ScratchStatus {
             val str = intensity?.toString()?.trim() ?: return STABLE
             val level = str.toDoubleOrNull()?.toInt() ?: when (str.uppercase()) {

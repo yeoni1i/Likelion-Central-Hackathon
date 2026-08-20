@@ -92,18 +92,13 @@ object RetrofitClient {
         response
     }
 
-    private val okHttpClient =
-        OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
-            .connectTimeout(
-                15,
-                TimeUnit.SECONDS
-            )
-            .readTimeout(
-                15,
-                TimeUnit.SECONDS
-            )
-            .build()
+    private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(authInterceptor)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(120, TimeUnit.SECONDS)
+        .build()
 
     private val retrofit =
         Retrofit.Builder()

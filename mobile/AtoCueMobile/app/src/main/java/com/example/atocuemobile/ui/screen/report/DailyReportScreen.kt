@@ -103,7 +103,7 @@ fun DailyReportScreen(
 
                     val headerTitle = when {
                         factors.size >= 2 ->
-                            "${factors[0].factor}와 ${factors[1].factor}이 함께 관찰됐어요"
+                            "${factors[0].factor}와 ${factors[1].factor}가 관찰됐어요"
 
                         factors.size == 1 ->
                             "${factors[0].factor}이 주요 변화로 관찰됐어요"
