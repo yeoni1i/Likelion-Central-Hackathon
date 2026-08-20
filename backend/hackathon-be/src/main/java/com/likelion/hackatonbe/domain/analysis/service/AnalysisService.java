@@ -1,11 +1,6 @@
 package com.likelion.hackatonbe.domain.analysis.service;
 
-import com.likelion.hackatonbe.domain.analysis.dto.DailyAnalysisResponse;
-import com.likelion.hackatonbe.domain.analysis.dto.DailyReportResponse;
-import com.likelion.hackatonbe.domain.analysis.dto.EnvironmentSummaryDto;
-import com.likelion.hackatonbe.domain.analysis.dto.ReportAiAnalysisDto;
-import com.likelion.hackatonbe.domain.analysis.dto.ScratchSummaryDto;
-import com.likelion.hackatonbe.domain.analysis.dto.WeeklyAnalysisResponse;
+import com.likelion.hackatonbe.domain.analysis.dto.*;
 import com.likelion.hackatonbe.domain.dailylog.dto.DailyLogDto;
 import com.likelion.hackatonbe.domain.dailylog.entity.DailyLog;
 import com.likelion.hackatonbe.domain.dailylog.service.DailyLogService;
@@ -299,17 +294,24 @@ public class AnalysisService {
                 );
 
 
-        // 20. 최종 일간 리포트 반환
+        // 20. 위험 식단 섹션 DTO 조립
+        RiskFoodSectionDto riskFoodSection = new RiskFoodSectionDto(
+                aiAnalysis.riskFoodTitle() != null ? aiAnalysis.riskFoodTitle() : "자주 섭취한 식단을 주의 깊게 관찰해 보세요.",
+                aiAnalysis.riskFoods() != null ? aiAnalysis.riskFoods() : List.of()
+        );
+
+
+        // 21. 최종 일간 리포트 반환
         return new DailyReportResponse(
                 date,
                 scratchSummary,
                 environmentSummary,
                 dailyAnalysis.hourly(),
                 weeklyAnalysis.daily(),
-                aiAnalysis
+                aiAnalysis,
+                riskFoodSection
         );
     }
-
 
     /**
      * 최근 평균 대비 오늘 긁음 횟수 증감률

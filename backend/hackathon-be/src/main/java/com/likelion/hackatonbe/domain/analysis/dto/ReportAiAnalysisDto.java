@@ -7,6 +7,8 @@ public record ReportAiAnalysisDto(
         String pattern,
         String carePoint,
         String triggerFactor,
-        List<TriggerFactorDto> triggerFactors
+        List<TriggerFactorDto> triggerFactors,
+        String riskFoodTitle,
+        List<RiskFoodDto> riskFoods
 ) {
 }
