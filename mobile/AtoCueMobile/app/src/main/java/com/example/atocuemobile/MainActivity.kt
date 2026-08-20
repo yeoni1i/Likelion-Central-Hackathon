@@ -40,10 +40,12 @@ import com.example.atocuemobile.viewmodel.HomeViewModel
 import com.example.atocuemobile.ui.screen.timeline.TimelineScreen
 import com.google.android.gms.location.LocationServices
 import com.example.atocuemobile.ui.screen.report.DailyReportScreen
+import android.content.Context
+import androidx.core.content.edit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        //installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -60,6 +62,31 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+// 온보딩 완료 여부를 로컬에 기억해두는 헬퍼
+private object OnboardingPrefs {
+    private const val PREFS_NAME = "atocue_onboarding_prefs"
+
+    private fun prefs(context: Context) =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    fun getCompletedChildId(context: Context, userId: Long): Long? {
+        val value = prefs(context).getLong("child_id_$userId", -1L)
+        return if (value == -1L) null else value
+    }
+
+    fun setCompleted(context: Context, userId: Long, childId: Long) {
+        prefs(context).edit {
+            putLong("child_id_$userId", childId)
+        }
+    }
+
+    fun clear(context: Context, userId: Long) {
+        prefs(context).edit {
+            remove("child_id_$userId")
+        }
+    }
+}
 private enum class AppScreen {
     LOGIN,
     SIGN_UP,
@@ -83,7 +110,7 @@ private fun AppRoot() {
     var loggedInUserId by remember { mutableStateOf<Long?>(null) }
     var authToken by remember { mutableStateOf<String?>(null) }
 
-    var savedChildId by remember { mutableStateOf<Long?>(1L) }
+    var savedChildId by remember { mutableStateOf<Long?>(null) }
 
     val onboardingViewModel: OnboardingViewModel = viewModel()
     val registeredChildId = onboardingViewModel.registeredChildId
@@ -105,15 +132,49 @@ private fun AppRoot() {
 
     when (currentScreen) {
         AppScreen.LOGIN -> LoginScreen(
-            onLoginSuccess = { userId, token, isOnboarded ->
-                Log.d("AtoCue_Auth", "====== [로그인 성공] userId: $userId, token: $token, isOnboarded: $isOnboarded ======")
+            onLoginSuccess = { userId, token, isOnboarded, childId ->
+
+                Log.d(
+                    "AtoCue_Auth",
+                    "로그인 성공 userId=$userId, " +
+                            "isOnboarded=$isOnboarded, childId=$childId"
+                )
+
                 loggedInUserId = userId
                 authToken = token
                 RetrofitClient.accessToken = token
 
-                if (isOnboarded) {
+                if (!isOnboarded) {
+
+                    // 신규 사용자
+                    OnboardingPrefs.clear(context, userId)
+                    savedChildId = null
+
+                    currentScreen = AppScreen.PERMISSION
+
+                } else if (childId != null) {
+
+                    // 기존 온보딩 완료 사용자
+                    savedChildId = childId
+
+                    // 로컬 저장은 판단 기준이 아니라 캐시 용도
+                    OnboardingPrefs.setCompleted(
+                        context = context,
+                        userId = userId,
+                        childId = childId
+                    )
+
                     currentScreen = AppScreen.MAIN
+
                 } else {
+
+                    // DB 상태가 비정상적인 경우
+                    Log.e(
+                        "AtoCue_Auth",
+                        "isOnboarded=true인데 childId=null"
+                    )
+
+                    savedChildId = null
                     currentScreen = AppScreen.PERMISSION
                 }
             },
@@ -168,6 +229,37 @@ private fun AppRoot() {
                 onboardingViewModel.submitOnboarding(
                     jwtToken = token,
                     onSuccess = {
+                        val userId = loggedInUserId
+                        val childId = onboardingViewModel.registeredChildId
+
+                        Log.d(
+                            "AtoCue_Onboarding",
+                            "온보딩 성공: userId=$userId, childId=$childId"
+                        )
+
+                        if (userId != null && childId != null) {
+                            savedChildId = childId
+
+                            OnboardingPrefs.setCompleted(
+                                context = context,
+                                userId = userId,
+                                childId = childId
+                            )
+
+                            val saved =
+                                OnboardingPrefs.getCompletedChildId(context, userId)
+
+                            Log.d(
+                                "AtoCue_Onboarding",
+                                "온보딩 저장 완료: userId=$userId, childId=$saved"
+                            )
+                        } else {
+                            Log.e(
+                                "AtoCue_Onboarding",
+                                "온보딩 저장 실패: userId 또는 childId가 null입니다. userId=$userId, childId=$childId"
+                            )
+                        }
+
                         currentScreen = AppScreen.ONBOARDING_COMPLETE
                     },
                     onError = { errorMsg ->
@@ -198,6 +290,7 @@ private fun AppRoot() {
                 val parentName = onboardingViewModel.parentName.ifBlank { "보호자" }
 
                 MainHomeScreenContainer(
+                    userId = loggedInUserId!!,
                     homeViewModel = vm,
                     parentName = parentName,
 
@@ -293,6 +386,7 @@ private fun AppRoot() {
 
 @Composable
 private fun MainHomeScreenContainer(
+    userId: Long,
     homeViewModel: HomeViewModel,
     parentName: String,
     onNavigateToConnectWatch: () -> Unit,
@@ -404,9 +498,14 @@ private fun MainHomeScreenContainer(
 
 
         BottomNavTab.TIMELINE -> {
-
             TimelineScreen(
                 homeViewModel = homeViewModel,
+
+                selectedBottomTab = selectedTab,
+
+                onBottomTabSelected = { tab ->
+                    selectedTab = tab
+                },
 
                 onAddRecordClick = {
                     onNavigateToMealCapture()
@@ -418,10 +517,14 @@ private fun MainHomeScreenContainer(
             )
         }
 
-
         BottomNavTab.REPORT -> {
-
-            DailyReportScreen()
+            DailyReportScreen(
+                userId = userId,
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                }
+            )
         }
 
 

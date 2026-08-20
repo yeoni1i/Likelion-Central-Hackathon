@@ -43,7 +43,7 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    private val userId: Long,
+    val userId: Long,
     private val childId: Long,
     initialDeviceConnected: Boolean = false
 ) : ViewModel() {
@@ -181,12 +181,12 @@ class HomeViewModel(
                         else -> hour
                     }
 
-                    val minutes = ((event.durationSec.toString().toDoubleOrNull() ?: 0.0) / 60).toInt()
+                    val durationSeconds = event.durationSec.toInt()
 
                     TimelineUiItem(
                         hourLabel = "${"%02d".format(hour12)}:00\n$ampm",
                         status = ScratchStatus.fromIntensity(event.intensity),
-                        durationLabel = "${minutes}분",
+                        durationLabel = "${durationSeconds}초",
                         timeRangeLabel = "%02d:%02d~%02d:%02d".format(
                             zoned.hour,
                             zoned.minute,

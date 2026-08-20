@@ -21,6 +21,7 @@ import com.example.atocuemobile.network.dto.ScratchEventDto
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeParseException
+import com.example.atocuemobile.network.dto.HourlyScratchDto
 
 // 시간대(새벽/오전/오후/저녁) - 시간 범위 매핑
 private val timeSlotRanges = mapOf(
@@ -63,14 +64,22 @@ private val defaultHourlyData = mapOf(
 
 @Composable
 fun HourlyScratchAnalysisSection(
-    events: List<ScratchEventDto> = emptyList()   // ✅ 추가: 그래프 데이터 소스
+    hourlyScratch: List<HourlyScratchDto>,
+    pattern: String,
+    carePoint: String
 ) {
     var selectedTimeSlot by remember { mutableStateOf("저녁") }
     val timeSlots = listOf("새벽", "오전", "오후", "저녁")
 
-    val hourlyData = remember(selectedTimeSlot, events) {
+    val hourlyData = remember(selectedTimeSlot, hourlyScratch) {
         val range = timeSlotRanges.getValue(selectedTimeSlot)
-        if (events.isNotEmpty()) aggregateEventsBySlot(events, range) else defaultHourlyData.getValue(selectedTimeSlot)
+
+        range.map { displayHour ->
+            val actualHour = if (displayHour == 24) 0 else displayHour
+
+            displayHour.toString().padStart(2, '0') to
+                    (hourlyScratch.find { it.hour == actualHour }?.count ?: 0)
+        }
     }
 
     val maxIndex = remember(hourlyData) { hourlyData.indices.maxByOrNull { hourlyData[it].second } ?: 0 }
@@ -85,16 +94,16 @@ fun HourlyScratchAnalysisSection(
     ) {
         Text("내일은 이것을 확인해보세요!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
+
         Text(
-            "오늘은 건조함과 우유 함유 식품이 함께 관찰됐어요.\n같은 조건에서 긁음이 반복되는지 확인해 주세요.",
-            fontSize = 12.sp, color = Color.Gray, lineHeight = 16.sp
+            text = carePoint, fontSize = 12.sp, color = Color.Gray, lineHeight = 16.sp
         )
 
         Spacer(modifier = Modifier.height(49.dp))
 
         Text("시간대별 긁음 분석", fontSize = 12.sp, color = Color.Gray)
         Spacer(modifier = Modifier.height(4.dp))
-        Text("저녁 23시에서 24시 사이에\n집중적으로 발생했어요.", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text( text = pattern, fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
         Spacer(modifier = Modifier.height(25.dp))
 

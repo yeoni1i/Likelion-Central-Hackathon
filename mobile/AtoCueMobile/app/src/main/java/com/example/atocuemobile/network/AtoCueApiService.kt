@@ -16,6 +16,11 @@ import com.example.atocuemobile.network.dto.DetectionStatusResponse
 import com.example.atocuemobile.network.dto.CurrentDetectionResponse
 import com.example.atocuemobile.network.dto.PairingStatusResponse
 import com.example.atocuemobile.network.dto.DailyLogResponse
+import com.example.atocuemobile.network.dto.RiskFoodListResponse
+import com.example.atocuemobile.network.dto.WeeklyScratchResponse
+import com.example.atocuemobile.network.dto.DailyAnalysisReportResponse
+import com.example.atocuemobile.network.dto.DailyAnalysisResponse
+import com.example.atocuemobile.network.dto.WeeklyAnalysisResponse
 import okhttp3.RequestBody
 import retrofit2.http.Multipart
 import retrofit2.http.Part
@@ -88,6 +93,13 @@ interface AtoCueApiService {
         @Path("deviceId") deviceId: Long
     ): CurrentDetectionResponse
 
+    @GET("scratch/events")
+    suspend fun getScratchTimeline(
+        @Header("X-User-Id") userId: Long,
+        @Query("date") date: String,
+        @Query("timezone") timezone: String = "Asia/Seoul"
+    ): ScratchTimelineResponse
+
     // 4. 긁음 데이터 통계 & 이벤트
     @GET("scratch/reports/daily")
     suspend fun getDailyScratchReport(
@@ -95,13 +107,6 @@ interface AtoCueApiService {
         @Query("date") date: String,
         @Query("timezone") timezone: String = "Asia/Seoul"
     ): DailyScratchResponse
-
-    @GET("scratch/events")
-    suspend fun getScratchTimeline(
-        @Header("X-User-Id") userId: Long,
-        @Query("date") date: String,
-        @Query("timezone") timezone: String = "Asia/Seoul"
-    ): ScratchTimelineResponse
 
     // 5. 날씨 API
     @GET("api/weather")
@@ -122,4 +127,37 @@ interface AtoCueApiService {
     suspend fun getDailyLogs(
         @Query("date") date: String
     ): List<DailyLogResponse>
+
+
+    // 일간 긁음 통계 조회
+    @GET("analysis/reports/daily")
+    suspend fun getDailyAnalysis(
+        @Header("X-User-Id") userId: Long,
+        @Query("date") date: String,
+        @Query("timezone") timezone: String = "Asia/Seoul"
+    ): Response<DailyAnalysisResponse>
+
+    // 2. 주간 긁음 통계  조회
+    @GET("analysis/reports/weekly")
+    suspend fun getWeeklyAnalysis(
+        @Header("X-User-Id") userId: Long,
+        @Query("date") date: String,
+        @Query("timezone") timezone: String = "Asia/Seoul"
+    ): Response<WeeklyAnalysisResponse>
+
+    // 3. OpenAI 최종 일간 AI 리포트 조회
+    @GET("analysis/daily")
+    suspend fun getDailyAiReport(
+        @Header("X-User-Id") userId: Long,
+        @Query("date") date: String
+    ): Response<DailyAnalysisReportResponse>
+
+    // ✅ 신규: 위험 식단 리스트 (백엔드 미구현 — 요청해야 함, 경로는 제안)
+    @GET("analysis/reports/risk-foods")
+    suspend fun getRiskFoodList(
+        @Header("X-User-Id") userId: Long = 1L,
+        @Query("baseDate") baseDate: String,
+        @Query("days") days: Int = 30
+    ): Response<RiskFoodListResponse>
 }
+

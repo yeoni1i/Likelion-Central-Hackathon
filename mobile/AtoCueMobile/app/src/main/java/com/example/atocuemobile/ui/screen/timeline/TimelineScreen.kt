@@ -25,6 +25,9 @@ import java.time.YearMonth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Scaffold
+import com.example.atocuemobile.ui.component.BottomNavTab
+import com.example.atocuemobile.ui.component.BottomNavigationBar
 
 
 private val tabTitles = listOf("긁음 감지", "식단기록", "생활기록")
@@ -33,100 +36,114 @@ private val tabTitles = listOf("긁음 감지", "식단기록", "생활기록")
 fun TimelineScreen(
     homeViewModel: HomeViewModel,
     onAddRecordClick: () -> Unit,
-    onNavigateToLifeRecordInput: () -> Unit
+    onNavigateToLifeRecordInput: () -> Unit,
+    selectedBottomTab: BottomNavTab = BottomNavTab.TIMELINE,
+    onBottomTabSelected: (BottomNavTab) -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(1) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var displayedMonth by remember { mutableStateOf(YearMonth.from(selectedDate)) }
     var showCalendarDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MainBackGroundColor)
-    ) {
-        TimelineTopBar(onCalendarClick = { showCalendarDialog = true })
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                selectedTab = selectedBottomTab,
+                onTabSelected = onBottomTabSelected
+            )
+        },
+        containerColor = MainBackGroundColor
+    ) { innerPadding ->
 
-        WeekCalendar(
-            month = "${displayedMonth.monthValue}월",
-            selectedDate = selectedDate.dayOfMonth,
-            onPrevMonth = { displayedMonth = displayedMonth.minusMonths(1) },
-            onNextMonth = { displayedMonth = displayedMonth.plusMonths(1) },
-            onDateSelect = { day -> selectedDate = displayedMonth.atDay(day) }
-        )
-
-        // 1. 회색 넓은 구분선
-        HorizontalDivider(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 15.dp), // 원하는 패딩 값 지정
-            thickness = 8.dp,
-            color = Color(0xFFF2F4F6)
-        )
+                .fillMaxSize()
+                .padding(bottom = innerPadding.calculateBottomPadding())
+                .background(MainBackGroundColor)
+        ) {
+            TimelineTopBar(onCalendarClick = { showCalendarDialog = true })
 
-        // 2. 왼쪽 정렬 탭 (디프리케이트 부분 제거)
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            edgePadding = 16.dp,
-            containerColor = Color.White,
-            contentColor = Color.Black, // 선택된 탭의 기본 인디케이터/텍스트 색상
-            divider = {}, // 하단 전체에
-        // 생기
-            indicator = { tabPositions ->
-                if (selectedTab < tabPositions.size) {
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = Color.Black
+            WeekCalendar(
+                month = "${displayedMonth.monthValue}월",
+                selectedDate = selectedDate.dayOfMonth,
+                onPrevMonth = { displayedMonth = displayedMonth.minusMonths(1) },
+                onNextMonth = { displayedMonth = displayedMonth.plusMonths(1) },
+                onDateSelect = { day -> selectedDate = displayedMonth.atDay(day) }
+            )
+
+            // 1. 회색 넓은 구분선
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 15.dp), // 원하는 패딩 값 지정
+                thickness = 8.dp,
+                color = Color(0xFFF2F4F6)
+            )
+
+            // 2. 왼쪽 정렬 탭 (디프리케이트 부분 제거)
+            ScrollableTabRow(
+                selectedTabIndex = selectedTab,
+                edgePadding = 16.dp,
+                containerColor = Color.White,
+                contentColor = Color.Black, // 선택된 탭의 기본 인디케이터/텍스트 색상
+                divider = {}, // 하단 전체에
+                // 생기
+                indicator = { tabPositions ->
+                    if (selectedTab < tabPositions.size) {
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                            color = Color.Black
+                        )
+                    }
+                }
+            ) {
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = {
+                            Text(
+                                text = title,
+                                fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        selectedContentColor = Color.Black,
+                        unselectedContentColor = Color.Gray
                     )
                 }
             }
-        ) {
-            tabTitles.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = {
-                        Text(
-                            text = title,
-                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    selectedContentColor = Color.Black,
-                    unselectedContentColor = Color.Gray
+
+            when (selectedTab) {
+                0 -> ScratchDetectTab(
+                    date = selectedDate,
+                    homeViewModel = homeViewModel
+                )
+
+                1 -> MealRecordTab(
+                    date = selectedDate,
+                    onAddRecordClick = onAddRecordClick
+                )
+
+                2 -> LifeRecordTab(
+                    date = selectedDate,
+                    onNavigateToLifeRecordInput = onNavigateToLifeRecordInput
                 )
             }
         }
 
-        when (selectedTab) {
-            0 -> ScratchDetectTab(
-                date = selectedDate,
-                homeViewModel = homeViewModel
-            )
-
-            1 -> MealRecordTab(
-                date = selectedDate,
-                onAddRecordClick = onAddRecordClick
-            )
-
-            2 -> LifeRecordTab(
-                date = selectedDate,
-                onNavigateToLifeRecordInput = onNavigateToLifeRecordInput
+        if (showCalendarDialog) {
+            MonthCalendarDialog(
+                yearMonth = displayedMonth,
+                selectedDate = selectedDate,
+                onPrevMonth = { displayedMonth = displayedMonth.minusMonths(1) },
+                onNextMonth = { displayedMonth = displayedMonth.plusMonths(1) },
+                onDateSelect = { date ->
+                    selectedDate = date
+                    displayedMonth = YearMonth.from(date)
+                    showCalendarDialog = false
+                },
+                onDismiss = { showCalendarDialog = false }
             )
         }
-    }
-
-    if (showCalendarDialog) {
-        MonthCalendarDialog(
-            yearMonth = displayedMonth,
-            selectedDate = selectedDate,
-            onPrevMonth = { displayedMonth = displayedMonth.minusMonths(1) },
-            onNextMonth = { displayedMonth = displayedMonth.plusMonths(1) },
-            onDateSelect = { date ->
-                selectedDate = date
-                displayedMonth = YearMonth.from(date)
-                showCalendarDialog = false
-            },
-            onDismiss = { showCalendarDialog = false }
-        )
     }
 }

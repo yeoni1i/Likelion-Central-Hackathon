@@ -78,15 +78,21 @@ fun MealRecordTab(
 
     val records = MealType.entries.map { type ->
 
-        val matchedLog = mealLogs.firstOrNull { log ->
+        val matchedLogs = mealLogs.filter { log ->
             log.mealType == type.name
         }
 
         MealRecord(
             date = date,
             mealType = type,
-            photoUrl = matchedLog?.imageUrl,
-            menuItems = matchedLog?.foods ?: emptyList()
+
+            photoUrl = matchedLogs
+                .firstOrNull { !it.imageUrl.isNullOrBlank() }
+                ?.imageUrl,
+
+            menuItems = matchedLogs
+                .flatMap { it.foods }
+                .distinct()
         )
     }
 

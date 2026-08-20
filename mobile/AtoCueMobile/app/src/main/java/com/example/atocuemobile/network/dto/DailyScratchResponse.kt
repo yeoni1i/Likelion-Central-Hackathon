@@ -64,12 +64,6 @@ data class RiskFoodItemDto(
     val reactionCount: Int
 )
 
-// ===== 기존 =====
-data class ScratchTimelineResponse(
-    val date: String,
-    val events: List<ScratchEventDto>
-)
-
 data class ScratchEventDto(
     val id: Long?,
     val startTime: String?,

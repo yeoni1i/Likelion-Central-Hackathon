@@ -19,7 +19,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.atocuemobile.network.dto.WeeklyScratchResponse
+import com.example.atocuemobile.network.dto.WeeklyTrendDto
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
+
 
 private val defaultWeeklyData = listOf(
     "일" to 30, "월" to 55, "화" to 42,
@@ -28,17 +32,30 @@ private val defaultWeeklyData = listOf(
 
 @Composable
 fun WeeklyTrendAnalysisSection(
-    weekly: WeeklyScratchResponse? = null   // ✅ 추가: null이면 기존 더미값 사용
+    weeklyTrend: List<WeeklyTrendDto>,
+    weeklyAverage: Double,
+    changePercent: Double
 ) {
-    val weeklyData = remember(weekly) {
-        weekly?.dailyCounts?.map { it.dayLabel to it.eventCount } ?: defaultWeeklyData
-    }
-    val averageCount = remember(weekly) {
-        weekly?.averageCount?.toInt() ?: 40
+    val weeklyData = remember(weeklyTrend) {
+        weeklyTrend.map {
+            val date = LocalDate.parse(it.date)
+
+            date.dayOfWeek.getDisplayName(
+                TextStyle.SHORT,
+                Locale.KOREAN
+            ) to it.count
+        }
     }
 
-    val maxIndex = remember(weeklyData) { weeklyData.indices.maxByOrNull { weeklyData[it].second } ?: 0 }
-    var selectedBarIndex by remember(weeklyData) { mutableStateOf(maxIndex) }
+    val averageCount = weeklyAverage.toInt()
+
+    val maxIndex = remember(weeklyData) {
+        weeklyData.indices.maxByOrNull { weeklyData[it].second } ?: 0
+    }
+
+    var selectedBarIndex by remember(weeklyData) {
+        mutableStateOf(maxIndex)
+    }
 
     Column(
         modifier = Modifier
@@ -219,7 +236,13 @@ fun WeeklyTrendAnalysisSection(
                             append("최근 일주일 평균보다 ")
                         }
                         withStyle(style = SpanStyle(color = Color(0xFF000000), fontWeight = FontWeight(400), fontSize = 13.sp)) {
-                            append("18% 증가했어요")
+                            append(
+                                if (changePercent >= 0) {
+                                    "${"%.1f".format(changePercent)}% 증가했어요"
+                                } else {
+                                    "${"%.1f".format(-changePercent)}% 감소했어요"
+                                }
+                            )
                         }
                     }
                 )

@@ -122,9 +122,9 @@ object RetrofitClient {
     }
 
     // 일상/식단 기록 연동용 API 인터페이스
-    val apiService: ApiService by lazy {
+    val apiService:AtoCueApiService by lazy {
         retrofit.create(
-            ApiService::class.java
+            AtoCueApiService::class.java
         )
     }
 }
