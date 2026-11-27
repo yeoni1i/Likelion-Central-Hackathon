@@ -5,9 +5,8 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: "앱이 접속할 서버 주소 (끝에 / 필수, 예: https://xxxx.trycloudflare.com/)"
-        required: true
-        default: "http://10.0.2.2:8080/"
+        description: "앱이 접속할 서버 주소 (끝에 / 필수, 예: https://xxxx.trycloudflare.com/). 비워두면 각 앱의 기본 주소 사용"
+        required: false
   # PR을 올리면 빌드가 깨지지 않는지 자동 확인
   pull_request:
     paths:
@@ -15,13 +14,14 @@ on:
       - "mobile/**"
       - "gradle/**"
       - "*.gradle.kts"
+      - "gradle.properties"
       - ".github/workflows/android-apk.yml"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      BASE_URL: ${{ github.event.inputs.base_url || 'http://10.0.2.2:8080/' }}
+      BASE_URL: ${{ github.event.inputs.base_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -41,12 +41,12 @@ jobs:
         working-directory: mobile/AtoCueMobile
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug -PATOCUE_BASE_URL="$BASE_URL"
+          ./gradlew assembleDebug ${BASE_URL:+-PATOCUE_BASE_URL="$BASE_URL"}
 
       - name: Build watch app (워치 앱)
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug -PATOCUE_BASE_URL="$BASE_URL"
+          ./gradlew assembleDebug ${BASE_URL:+-PATOCUE_BASE_URL="$BASE_URL"}
 
       - name: Upload mobile APK
         uses: actions/upload-artifact@v4
