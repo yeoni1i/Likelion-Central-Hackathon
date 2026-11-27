@@ -18,6 +18,10 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        // 서버 주소: gradle.properties 또는 빌드 명령의 -PATOCUE_BASE_URL=... 로 바꿀 수 있음 (끝에 / 필수)
+        val baseUrl = (project.findProperty("ATOCUE_BASE_URL") as String?) ?: "http://10.0.2.2:8080/"
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -34,6 +38,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

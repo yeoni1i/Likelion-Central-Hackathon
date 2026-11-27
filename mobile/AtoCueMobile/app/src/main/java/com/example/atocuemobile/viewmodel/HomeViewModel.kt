@@ -37,6 +37,7 @@ data class HomeUiState(
     val currentStatus: ScratchStatus = ScratchStatus.STABLE,
     val totalScratchSecondsToday: Int = 0,
     val weatherData: WeatherResponse? = null,
+    val timeCriteriaText: String = "",
     val guideList: List<GuideMessage> = emptyList(),
     val timelineItems: List<TimelineUiItem> = emptyList(),
     val errorMessage: String? = null
@@ -216,7 +217,7 @@ class HomeViewModel(
     }
 
     // 4. 날씨 정보 조회 (인터셉터가 토큰을 자동 처리하므로 위도/경도만 전달)
-    fun fetchWeather(lat: Double = 37.5665, lon: Double = 126.9780) {
+    fun fetchWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.getWeather(
@@ -227,7 +228,8 @@ class HomeViewModel(
                 _uiState.update {
                     it.copy(
                         weatherData = response,
-                        guideList = guides
+                        guideList = guides,
+                        timeCriteriaText = formatTimeCriteria(java.time.LocalDateTime.now())
                     )
                 }
             } catch (e: Exception) {
@@ -235,6 +237,10 @@ class HomeViewModel(
             }
         }
     }
+
+    // 예: "11월 27일 (금) 19시 기준"
+    private fun formatTimeCriteria(now: java.time.LocalDateTime): String =
+        now.format(DateTimeFormatter.ofPattern("M월 d일 (E) H시 기준", java.util.Locale.KOREAN))
 
     private fun generateWeatherGuides(weather: WeatherResponse?): List<GuideMessage> {
         if (weather == null) {

@@ -9,7 +9,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    // build.gradle.kts의 ATOCUE_BASE_URL 값 (기본: 에뮬레이터용 10.0.2.2)
+    private val BASE_URL = com.example.atocuemobile.BuildConfig.BASE_URL
 
     var accessToken: String? = null
 
