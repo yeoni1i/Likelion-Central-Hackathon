@@ -122,7 +122,7 @@ fun HomeScreen(
     pairingCode: String = "123456",
     currentStatus: ScratchStatus = ScratchStatus.STABLE,
     totalScratchSeconds: Int = 0,
-    timeCriteriaText: String = "00월 00일 (수) 00시 기준",
+    timeCriteriaText: String = "",
     weatherData: WeatherResponse? = null,
     guideList: List<GuideMessage> = listOf(
         GuideMessage("실내습도 00%이상 유지", "오늘은 지난 3일보다 평균 기온이 높고 습도가 낮아요 실내에서는 적정한 온도와 높은 습도를 유지해주세요"),

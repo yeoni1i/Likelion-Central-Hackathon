@@ -18,6 +18,10 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        // 서버 주소: gradle.properties 또는 빌드 명령의 -PATOCUE_BASE_URL=... 로 바꿀 수 있음 (끝에 / 필수)
+        val baseUrl = (project.findProperty("ATOCUE_BASE_URL") as String?) ?: "http://192.168.45.39:8080/"
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+
     }
 
     buildTypes {
@@ -34,6 +38,7 @@ android {
     useLibrary("wear-sdk")
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

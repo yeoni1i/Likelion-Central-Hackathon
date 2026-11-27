@@ -44,6 +44,8 @@ import com.example.atocuemobile.ui.screen.timeline.TimelineScreen
 import com.google.android.gms.location.LocationServices
 import com.example.atocuemobile.ui.screen.report.DailyReportScreen
 import android.content.Context
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import androidx.core.content.edit
 
 class MainActivity : ComponentActivity() {
@@ -434,29 +436,7 @@ private fun MainHomeScreenContainer(
     var selectedTab by remember { mutableStateOf(initialTab) }
 
     LaunchedEffect(Unit) {
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        val hasFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val hasCoarseLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-
-        if (hasFineLocation || hasCoarseLocation) {
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        homeViewModel.fetchWeather(lat = location.latitude, lon = location.longitude)
-                    } else {
-                        homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
-                    }
-                }.addOnFailureListener {
-                    homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
-                }
-            } catch (e: SecurityException) {
-                e.printStackTrace()
-                homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
-            }
-        } else {
-            homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
-        }
-
+        fetchWeatherForCurrentLocation(context, homeViewModel)
         homeViewModel.loadToday()
     }
 
@@ -474,13 +454,14 @@ private fun MainHomeScreenContainer(
                 totalScratchSeconds = uiState.totalScratchSecondsToday,
                 timelineItems = uiState.timelineItems,
                 weatherData = uiState.weatherData,
+                timeCriteriaText = uiState.timeCriteriaText,
                 guideList = uiState.guideList,
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it },
                 onConnectWatchClick = onNavigateToConnectWatch,
                 onRefreshClick = {
                     homeViewModel.loadToday()
-                    homeViewModel.fetchWeather(lat = 37.5665, lon = 126.9780)
+                    fetchWeatherForCurrentLocation(context, homeViewModel)
                 },
                 onStartDetectionClick = { homeViewModel.onStartDetection() },
                 onStopDetectionClick = { homeViewModel.onStopDetection() },
@@ -518,5 +499,47 @@ private fun MainHomeScreenContainer(
                 onLogoutClick = onLogout
             )
         }
+    }
+}
+
+// 위치 권한이 없거나 위치를 못 가져올 때만 쓰는 기본 좌표 (서울시청)
+private const val DEFAULT_LAT = 37.5665
+private const val DEFAULT_LON = 126.9780
+
+/**
+ * 현재 위치 기준으로 날씨를 조회한다.
+ * lastLocation은 캐시된 위치라 새로 설치한 APK/실기기에서는 null인 경우가 많아서
+ * getCurrentLocation으로 새 위치를 먼저 요청하고, 실패하면 lastLocation → 기본 좌표 순으로 사용한다.
+ */
+private fun fetchWeatherForCurrentLocation(context: Context, homeViewModel: HomeViewModel) {
+    val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    if (!hasFine && !hasCoarse) {
+        homeViewModel.fetchWeather(lat = DEFAULT_LAT, lon = DEFAULT_LON)
+        return
+    }
+
+    val client = LocationServices.getFusedLocationProviderClient(context)
+    try {
+        client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, CancellationTokenSource().token)
+            .addOnSuccessListener { current ->
+                if (current != null) {
+                    homeViewModel.fetchWeather(lat = current.latitude, lon = current.longitude)
+                } else {
+                    client.lastLocation
+                        .addOnSuccessListener { last ->
+                            homeViewModel.fetchWeather(
+                                lat = last?.latitude ?: DEFAULT_LAT,
+                                lon = last?.longitude ?: DEFAULT_LON
+                            )
+                        }
+                        .addOnFailureListener { homeViewModel.fetchWeather(lat = DEFAULT_LAT, lon = DEFAULT_LON) }
+                }
+            }
+            .addOnFailureListener { homeViewModel.fetchWeather(lat = DEFAULT_LAT, lon = DEFAULT_LON) }
+    } catch (e: SecurityException) {
+        Log.e("AtoCue_Weather", "위치 권한 오류", e)
+        homeViewModel.fetchWeather(lat = DEFAULT_LAT, lon = DEFAULT_LON)
     }
 }
